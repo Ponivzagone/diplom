@@ -1,4 +1,5 @@
 QT -= gui
+QT += core
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -23,7 +24,9 @@ SOURCES += \
         NeuroNet/recognition.cpp \
         NeuroNet/trainingSet.cpp \
         NoteDescription.cpp \
-        main.cpp
+        main.cpp \
+        settings/config_reader.cpp \
+        settings/settings.cpp
 
 LIBS += -L/usr/local/lib -laubio
 
@@ -40,4 +43,6 @@ HEADERS += \
     NeuroNet/neuron.h \
     NeuroNet/recognition.h \
     NeuroNet/trainingSet.h \
-    NoteDescription.h
+    NoteDescription.h \
+    settings/config_reader.h \
+    settings/settings.h

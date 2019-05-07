@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdio.h>
 
+#include <settings/config_reader.h>
 
 
 void fvec_copy_to_end(const fvec_t * src, fvec_t * dist, const uint_t ind_beg_dist) {
@@ -43,6 +44,11 @@ void fvec_copy_to_start(const fvec_t * src, const uint_t ind_beg_src, fvec_t * d
 
 int main(int argc, char * argv[]) {
 
+    (void)argc;
+    (void)argv;
+
+    ConfigReader::instance().setValue<uint>(CoreSettings::bit_rate, 0);
+    ConfigReader::instance().setValue<uint>(CoreSettings::frame_size, 3);
 
     uint_t samplerate = 0;
     uint_t err = 0;
