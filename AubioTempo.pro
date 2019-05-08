@@ -1,4 +1,5 @@
-QT -= gui
+TEMPLATE = app
+QT += gui quick quickcontrols2
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -18,6 +19,7 @@ SOURCES += \
         AudioFFT.cpp \
         AudioInput.cpp \
         AudioTempo.cpp \
+        ImageProvider.cpp \
         NeuroNet/net.cpp \
         NeuroNet/neuron.cpp \
         NeuroNet/recognition.cpp \
@@ -26,6 +28,7 @@ SOURCES += \
         main.cpp
 
 LIBS += -L/usr/local/lib -laubio
+LIBS += -L/usr/lib -lpoppler-qt5
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -36,8 +39,16 @@ HEADERS += \
     AudioFFT.h \
     AudioInput.h \
     AudioTempo.h \
+    ImageProvider.h \
     NeuroNet/net.h \
     NeuroNet/neuron.h \
     NeuroNet/recognition.h \
     NeuroNet/trainingSet.h \
     NoteDescription.h
+
+RESOURCES += \
+    view/HomeForm.qml \
+    view/Page1Form.qml \
+    view/Page2Form.qml \
+    view/main.qml \
+    view/qtquickcontrols2.conf
