@@ -3,9 +3,18 @@
 #include <QQmlContext>
 
 #include <ImageProvider.h>
+#include <settings/config_reader.h>
+
 
 int main(int argc, char *argv[])
 {
+
+    (void)argc;
+    (void)argv;
+
+    ConfigReader::instance().setValue<uint>(CoreSettings::bit_rate, 0);
+    ConfigReader::instance().setValue<uint>(CoreSettings::frame_size, 3);
+
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QGuiApplication app(argc, argv);
@@ -50,6 +59,7 @@ int main(int argc, char *argv[])
 //        dist->data[i + ind_beg_dist] = src->data[i];
 //    }
 //}
+
 
 //void fvec_copy_to_start(const fvec_t * src, const uint_t ind_beg_src, fvec_t * dist) {
 
