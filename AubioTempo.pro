@@ -46,9 +46,8 @@ HEADERS += \
     NeuroNet/neuron.h \
     NeuroNet/recognition.h \
     NeuroNet/trainingSet.h \
-<<<<<<< HEAD \
     settings/config_reader.h \
-    settings/settings.h
+    settings/settings.h \
     NoteDescription.h
 
 RESOURCES += \
@@ -57,8 +56,4 @@ RESOURCES += \
     view/Page2Form.qml \
     view/main.qml \
     view/qtquickcontrols2.conf
-=======
-    NoteDescription.h \
-    settings/config_reader.h \
-    settings/settings.h
->>>>>>> 548957ec773c92843c5554861be048f52cb592c0
+
