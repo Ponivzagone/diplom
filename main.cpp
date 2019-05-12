@@ -1,8 +1,30 @@
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QtQml>
+
+
 #include <QCoreApplication>
 #include <aubio/aubio.h>
 #include <iostream>
 #include <stdio.h>
 
+#include <unistd.h>
+
+
+#include "AudioInput.h"
+
+int main(int argc, char * argv[]) {
+
+    QCoreApplication app(argc, argv);
+
+    QtReader jopa;
+    jopa.start();
+    QTimer::singleShot(3000, &jopa, &AudioInput::delList);
+    QObject::connect(&jopa, &AudioInput::finish, &app, QCoreApplication::quit);
+    return app.exec();
+
+
+}
 
 
 void fvec_copy_to_end(const fvec_t * src, fvec_t * dist, const uint_t ind_beg_dist) {
@@ -41,7 +63,7 @@ void fvec_copy_to_start(const fvec_t * src, const uint_t ind_beg_src, fvec_t * d
 #include <complex>
 
 
-int main(int argc, char * argv[]) {
+int main_jopa(int argc, char * argv[]) {
 
 
     uint_t samplerate = 0;

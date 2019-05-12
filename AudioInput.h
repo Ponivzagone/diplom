@@ -4,9 +4,12 @@
 #include <QObject>
 #include <QAudioInput>
 #include <aubio/aubio.h>
+#include <QScopedPointer>
+#include <memory>
 
-#include "AudioFFT.h"
-#include "AudioTempo.h"
+#include "AlgorithManager.h"
+
+class QtAudioDevice;
 
 class AudioInput : public QObject {
 
@@ -19,17 +22,34 @@ public:
     virtual void stop()  = 0;
     virtual void start() = 0;
 
+    void startAlgo();
+
+    uint_t getWinSize() const;
+    uint_t getHopSize() const;
+
+    void setSamples(std::shared_ptr<quint32> samples, unsigned int sizeSample);
+
 protected:
+
+    void initSampleBuffer();
+
+    QScopedPointer<AlgorithManager> algo;
+
+    std::list< std::shared_ptr<uint_t> > * sampleBuffer;
 
     uint_t winSize;
     uint_t hopSize;
+    uint_t fillSize;
 
 private:
+    void checkAndCopySample(std::shared_ptr<quint32> block,
+                                        std::shared_ptr<quint32> sample,
+                                        unsigned int size);
 
-
-
+signals:
+    void finish();
 public slots:
-
+    void delList();
 };
 
 class QtReader : public  AudioInput {
@@ -41,10 +61,14 @@ public:
     void stop();
     void start();
 
+private:
+    void initializeAudio(const QAudioDeviceInfo & deviceInfo);
+
 protected:
 
 private:
-    QAudioInput * audio;
+    QScopedPointer<QAudioInput> audioInput;
+    QScopedPointer<QtAudioDevice> audioDevice;
 
 signals:
 
@@ -52,11 +76,15 @@ public slots:
 
 };
 
-class AubioReader : public  AudioInput {
+/*class AubioReader : public  AudioInput {
 
 public:
     AubioReader();
     virtual ~AubioReader();
+
+    void stop();
+    void start();
+
 
 protected:
 
@@ -77,6 +105,6 @@ signals:
 public slots:
 
 };
-
+*/
 
 #endif // I_AUDIO_INPUT_H
