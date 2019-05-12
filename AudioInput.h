@@ -2,6 +2,7 @@
 #define I_AUDIO_INPUT_H
 
 #include <QObject>
+#include <QAudioInput>
 #include <aubio/aubio.h>
 
 #include "AudioFFT.h"
@@ -14,40 +15,52 @@ class AudioInput : public QObject {
 public:
     explicit AudioInput(QObject *parent = nullptr);
     virtual ~AudioInput() = 0;
-    void run();
+
+    virtual void stop()  = 0;
+    virtual void start() = 0;
 
 protected:
 
-    virtual void readyRead() = 0;
-
-    uint_t sampleRate;
     uint_t winSize;
     uint_t hopSize;
 
 private:
 
-    AudioFFT       * FFTAlgo;
-    TempoDetecting * TempoDetectAlgo;
 
-signals:
-    void updateWidget();
 
 public slots:
 
 };
 
+class QtReader : public  AudioInput {
 
-class AubioReader : public AudioInput {
+public:
+    QtReader();
+    virtual ~QtReader();
+
+    void stop();
+    void start();
+
+protected:
+
+private:
+    QAudioInput * audio;
+
+signals:
+
+public slots:
+
+};
+
+class AubioReader : public  AudioInput {
 
 public:
     AubioReader();
-    ~AubioReader();
+    virtual ~AubioReader();
 
 protected:
-    void readyRead();
 
 private:
-
     void fvec_copy_to_start(const fvec_t * src,
                             const uint_t ind_beg_src,
                                   fvec_t * dist);
@@ -56,10 +69,12 @@ private:
                                 fvec_t * dist,
                           const uint_t ind_beg_dist);
 
-
-
     char_t * sourcePath;
     aubio_source_t * source;
+
+signals:
+
+public slots:
 
 };
 

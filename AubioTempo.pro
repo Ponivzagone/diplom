@@ -1,4 +1,4 @@
-QT -= gui
+QT += gui multimedia core
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -15,6 +15,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        AudioDevice.cpp \
         AudioFFT.cpp \
         AudioInput.cpp \
         AudioTempo.cpp \
@@ -23,7 +24,9 @@ SOURCES += \
         NeuroNet/recognition.cpp \
         NeuroNet/trainingSet.cpp \
         NoteDescription.cpp \
-        main.cpp
+        main.cpp \
+        settings/config_reader.cpp \
+        settings/settings.cpp
 
 LIBS += -L/usr/local/lib -laubio
 
@@ -33,6 +36,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    AudioDevice.h \
     AudioFFT.h \
     AudioInput.h \
     AudioTempo.h \
@@ -40,4 +44,6 @@ HEADERS += \
     NeuroNet/neuron.h \
     NeuroNet/recognition.h \
     NeuroNet/trainingSet.h \
-    NoteDescription.h
+    NoteDescription.h \
+    settings/config_reader.h \
+    settings/settings.h
