@@ -3,14 +3,17 @@
 
 #include <aubio/aubio.h>
 #include <stdexcept>
+#include <memory>
 
+
+struct Sample;
 
 class AudioFFT
 {
 public:
     virtual ~AudioFFT() = 0;
 
-    virtual void     fftDo(const fvec_t * in) = 0;
+    virtual void     fftDo(const std::shared_ptr< Sample > in) = 0;
 
     virtual smpl_t * getNorm()  const = 0;
     virtual smpl_t * getPhase() const = 0;
@@ -24,7 +27,7 @@ public:
     AubioFFT & operator=(const AubioFFT & rhs) = delete;
     ~AubioFFT();
 
-    void fftDo(const fvec_t * in);
+    void fftDo(const std::shared_ptr< Sample > in);
 
     smpl_t * getNorm()  const;
     smpl_t * getPhase() const;
@@ -34,6 +37,7 @@ private:
 
     aubio_fft_t * fft;
     cvec_t      * fftGrain;
+    fvec_t      * fftIn;
 };
 
 

@@ -1,26 +1,31 @@
 #include "AudioFFT.h"
 
+#include "AudioInput.h"
+
 AudioFFT::~AudioFFT() {
 
 }
 
 
 AubioFFT::AubioFFT( const uint_t _winSize ) {
-    winSize = _winSize;
-    fft = new_aubio_fft(_winSize);
+    winSize  = _winSize;
+    fft      = new_aubio_fft(_winSize);
     fftGrain = new_cvec(_winSize);
+    fftIn    = new_fvec(_winSize);
 }
 
 AubioFFT::~AubioFFT() {
     del_aubio_fft(fft);
     del_cvec(fftGrain);
+    del_fvec(fftIn);
 }
 
-void AubioFFT::fftDo( const fvec_t * in ) {
-    if(in->length != winSize) {
+void AubioFFT::fftDo(const std::shared_ptr< Sample > in ) {
+    if(in->winSize != winSize) {
         throw std::runtime_error("aubio FFT winSize != input signal length");
     }
-    aubio_fft_do(fft, in, fftGrain);
+    in->convertAubio(fftIn);
+    aubio_fft_do(fft, fftIn, fftGrain);
 }
 
 smpl_t * AubioFFT::getNorm() const {

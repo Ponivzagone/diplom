@@ -9,12 +9,6 @@
 #include <memory>
 #include "AudioInput.h"
 
-class AubioDevice
-{
-public:
-    AubioDevice();
-};
-
 
 class QtAudioDevice : public QIODevice
 {

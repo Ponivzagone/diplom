@@ -92,3 +92,4 @@ qint64 QtAudioDevice::writeData(const char *data, qint64 maxSize)
 
     return maxSize;
 }
+

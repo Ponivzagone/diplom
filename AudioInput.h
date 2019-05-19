@@ -7,9 +7,67 @@
 #include <QScopedPointer>
 #include <memory>
 
+#include <aubio/aubio.h>
+
 #include "AlgorithManager.h"
 
 class QtAudioDevice;
+
+struct Sample {
+
+    Sample() {}
+    Sample(quint32 _winSize) : amplitude(new quint32[_winSize]), fillSize(0), winSize(_winSize) {}
+    Sample(const Sample & tmp) : amplitude(new quint32[tmp.winSize]), fillSize(tmp.fillSize), winSize(tmp.winSize)
+    {
+        memcpy(amplitude, tmp.amplitude, sizeof(quint32) * tmp.winSize);
+    }
+    Sample & operator=(const Sample & rhs)
+    {
+        if(&rhs == this) {
+            return *this;
+        }
+        winSize = rhs.winSize;
+        fillSize = rhs.fillSize;
+        if(!amplitude) { new quint32[rhs.winSize]; }
+        memcpy(amplitude, rhs.amplitude, sizeof(quint32) * rhs.winSize);
+        return *this;
+    }
+    ~Sample() { if(amplitude) { delete [] amplitude; } }
+
+    void setEmpthy()
+    {
+        for(quint32 i = fillSize; i < winSize; i++)
+        {
+            amplitude[i] = 0;
+        }
+    }
+
+    std::shared_ptr<fvec_t> convertAubio()
+    {
+        std::shared_ptr<fvec_t> tmp = std::make_shared<fvec_t>((fvec_t *)calloc(sizeof(fvec_t),1), [](fvec_t * tmp){
+                                                                    free(tmp);
+                                                                });
+        tmp->data =  reinterpret_cast<smpl_t * >(this->amplitude);
+        tmp->length = winSize;
+        return tmp;
+    }
+
+    void convertAubio(fvec_t * in)
+    {
+        if(in->length != winSize) {
+            throw std::runtime_error("aubio FFT winSize != input signal length");
+            return;
+        }
+        in->data = reinterpret_cast<smpl_t * >(this->amplitude);
+    }
+
+
+
+    quint32 * amplitude = nullptr;
+    quint32 fillSize;
+    quint32 winSize;
+};
+
 
 class AudioInput : public QObject {
 
@@ -22,7 +80,6 @@ public:
     virtual void stop()  = 0;
     virtual void start() = 0;
 
-    void startAlgo();
 
     uint_t getWinSize() const;
     uint_t getHopSize() const;
@@ -35,16 +92,17 @@ protected:
 
     QScopedPointer<AlgorithManager> algo;
 
-    std::list< std::shared_ptr<uint_t> > * sampleBuffer;
+    std::list< std::shared_ptr< Sample > > * sampleBuffer;
 
-    uint_t winSize;
-    uint_t hopSize;
-    uint_t fillSize;
+    quint32 winSize;
+    quint32 hopSize;
 
 private:
-    void checkAndCopySample(std::shared_ptr<quint32> block,
+    void checkAndCopySample(std::shared_ptr<Sample> block,
                                         std::shared_ptr<quint32> sample,
                                         unsigned int size);
+
+    void setLastSample();
 
 signals:
     void finish();
@@ -76,7 +134,7 @@ public slots:
 
 };
 
-/*class AubioReader : public  AudioInput {
+class AubioReader : public  AudioInput {
 
 public:
     AubioReader();
@@ -89,22 +147,17 @@ public:
 protected:
 
 private:
-    void fvec_copy_to_start(const fvec_t * src,
-                            const uint_t ind_beg_src,
-                                  fvec_t * dist);
-
-    void fvec_copy_to_end(const fvec_t * src,
-                                fvec_t * dist,
-                          const uint_t ind_beg_dist);
 
     char_t * sourcePath;
     aubio_source_t * source;
+
+    uint_t sampleRate;
 
 signals:
 
 public slots:
 
 };
-*/
+
 
 #endif // I_AUDIO_INPUT_H

@@ -13,7 +13,7 @@
 
 #include "AudioInput.h"
 
-int main(int argc, char * argv[]) {
+int kkmain(int argc, char * argv[]) {
 
     QCoreApplication app(argc, argv);
 
@@ -22,8 +22,6 @@ int main(int argc, char * argv[]) {
     QTimer::singleShot(3000, &jopa, &AudioInput::delList);
     QObject::connect(&jopa, &AudioInput::finish, &app, QCoreApplication::quit);
     return app.exec();
-
-
 }
 
 
@@ -63,7 +61,7 @@ void fvec_copy_to_start(const fvec_t * src, const uint_t ind_beg_src, fvec_t * d
 #include <complex>
 
 
-int main_jopa(int argc, char * argv[]) {
+int main(int argc, char * argv[]) {
 
 
     uint_t samplerate = 0;
@@ -72,7 +70,7 @@ int main_jopa(int argc, char * argv[]) {
     uint_t hop_size = win_size / 32;
     uint_t n_frames = 0, read = 0;
 
-    char_t * source_path = "/srv/dev/Diplom/source/gamma.wav";
+    char_t * source_path = "/srv/download/gamma.wav";
 
     aubio_source_t * source = new_aubio_source(source_path, samplerate, hop_size);
 
