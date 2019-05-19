@@ -11,12 +11,18 @@ AubioFFT::AubioFFT( const uint_t _winSize ) {
     winSize  = _winSize;
     fft      = new_aubio_fft(_winSize);
     fftGrain = new_cvec(_winSize);
+
+
     fftIn    = new_fvec(_winSize);
+    if(fftIn->data) { free(fftIn->data); }
 }
 
 AubioFFT::~AubioFFT() {
     del_aubio_fft(fft);
     del_cvec(fftGrain);
+
+    fftIn->data = nullptr;
+    fftIn->data = (smpl_t *)calloc(sizeof(smpl_t),1);
     del_fvec(fftIn);
 }
 
