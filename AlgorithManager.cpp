@@ -1,8 +1,11 @@
 #include "AlgorithManager.h"
 
 #include <settings/config_reader.h>
+#include "AudioInput.h"
+#include <iostream>
 
-AlgorithManager::AlgorithManager(uint_t winSize, uint_t hopSize)
+AlgorithManager::AlgorithManager(uint_t _winSize, uint_t hopSize)
+    : winSize(_winSize)
 {
     spectrumeAnalyze.reset(new AubioFFT(winSize));
     beatTracker.reset(new AubioTempo(
@@ -18,12 +21,25 @@ AlgorithManager::~AlgorithManager()
 
 }
 
-void AlgorithManager::algLoop(std::list<std::shared_ptr<Sample> > *sampleBuffer)
+void AlgorithManager::algLoop(std::list<std::shared_ptr<Sample> > & sampleBuffer)
 {
+    for(auto& sample : sampleBuffer)
+    {
+        sample->setEmpthy();
+        algStep(sample);
 
+        //TODO: analyse duration note
+    }
 }
 
-void AlgorithManager::algStep(std::shared_ptr<Sample> sample)
+void AlgorithManager::algStep(std::shared_ptr<Sample> & sample)
 {
+    spectrumeAnalyze->fftDo(sample);
+    float * jopa = spectrumeAnalyze->getNorm();
+    for(int i = 0; i < winSize; i += 100)
+    {
+        std::cout << jopa[i] << "   ";
+    }
+    std::cout << std::endl;
 
 }

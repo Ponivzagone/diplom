@@ -19,9 +19,9 @@ public:
     AlgorithManager(uint_t winSize, uint_t hopSize);
     ~AlgorithManager();
 
-    void algLoop( std::list< std::shared_ptr< Sample > > * sampleBuffer );
+    void algLoop( std::list< std::shared_ptr< Sample > > & sampleBuffer );
 
-    void algStep( std::shared_ptr< Sample > sample );
+    void algStep( std::shared_ptr< Sample > & sample );
 
 
 
@@ -30,7 +30,7 @@ public:
 private:
 
 
-
+    uint_t winSize;
 
 
     QScopedPointer<AudioFFT> spectrumeAnalyze;

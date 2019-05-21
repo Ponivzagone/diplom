@@ -44,10 +44,10 @@ struct Sample {
 
     std::shared_ptr<fvec_t> convertAubio()
     {
-        std::shared_ptr<fvec_t> tmp = std::make_shared<fvec_t>((fvec_t *)calloc(sizeof(fvec_t),1), [](fvec_t * tmp){
+        std::shared_ptr<fvec_t> tmp((fvec_t *)calloc(sizeof(fvec_t),1), [](fvec_t * tmp){
                                                                     free(tmp);
                                                                 });
-        tmp->data =  reinterpret_cast<smpl_t * >(this->amplitude);
+        tmp->data =  reinterpret_cast<smpl_t * >(this->amplitude);//полная хуйня
         tmp->length = winSize;
         return tmp;
     }
@@ -58,7 +58,7 @@ struct Sample {
             throw std::runtime_error("aubio FFT winSize != input signal length");
             return;
         }
-        in->data = reinterpret_cast<smpl_t * >(this->amplitude);
+        in->data = reinterpret_cast<smpl_t * >(this->amplitude);//полная хуйня
     }
 
 

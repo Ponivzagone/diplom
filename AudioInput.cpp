@@ -129,7 +129,7 @@ void QtReader::stop()
 {
     audioDevice->stop();
     audioInput->stop();
-
+    algo->algLoop(*sampleBuffer);
 
 
 }

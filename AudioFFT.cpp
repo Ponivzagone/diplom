@@ -2,6 +2,8 @@
 
 #include "AudioInput.h"
 
+#include <iostream>
+
 AudioFFT::~AudioFFT() {
 
 }
@@ -31,6 +33,12 @@ void AubioFFT::fftDo(const std::shared_ptr< Sample > in ) {
         throw std::runtime_error("aubio FFT winSize != input signal length");
     }
     in->convertAubio(fftIn);
+    for(int i = 0; i < fftIn->length; i++)
+    {
+        std::cout << in->amplitude[i] << "|";
+        std::cout << fftIn->data[i]   << "<->";
+    }
+    std::cout << std::endl;
     aubio_fft_do(fft, fftIn, fftGrain);
 }
 

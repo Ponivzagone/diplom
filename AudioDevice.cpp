@@ -36,6 +36,7 @@ qint64 QtAudioDevice::readData(char *data, qint64 maxSize)
     Q_UNUSED(maxSize)
     return -1;
 }
+#include <iostream>
 
 qint64 QtAudioDevice::writeData(const char *data, qint64 maxSize)
 {
