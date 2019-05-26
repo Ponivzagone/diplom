@@ -13,6 +13,7 @@ enum class CoreSettings : uint
     source_path = 5
 };
 
+
 namespace Settings
 {
     bool keyToString(CoreSettings key, QString& key_str);

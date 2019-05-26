@@ -102,7 +102,7 @@ void Net::getneuroWeight()
         }
     }
     std::ofstream fout;
-    fout.open("C:/Users/Sementos/Desktop/kursovaia/dataSetNet/InOutWeight.txt");
+    fout.open("/srv/Diplom/app/courseWork/dataSetNet/InOutWeight.txt");
 
     for(unsigned i = 0; i < readWeight.size(); ++i)
     {

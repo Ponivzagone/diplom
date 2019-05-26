@@ -3,18 +3,18 @@
 
 #include <QAudioInput>
 #include <aubio/aubio.h>
-#include <QtCore/QPointF>
-#include <QtCore/QVector>
-#include <QScopedPointer>
 #include <memory>
-#include "AudioInput.h"
 
+#include <QThread>
+#include <cstring>
+
+#include "AudioInput.h"
 
 class QtAudioDevice : public QIODevice
 {
     Q_OBJECT
 public:
-    explicit QtAudioDevice(const QAudioFormat & format, AudioInput *parent = nullptr);
+    explicit QtAudioDevice(const QAudioFormat & format, QtReader *parent = nullptr);
     virtual ~QtAudioDevice() override;
 
     void start();
@@ -25,11 +25,8 @@ protected:
     qint64 writeData(const char *data, qint64 maxSize) override;
 
 private:
-    AudioInput * audioInput;
-    const QAudioFormat format;
-
-    quint32 * buffer;
-    quint32   fillSize;
+    QtReader * audioInput;
+    const QAudioFormat format;  
 
     int channelBytes;
     int sampleBytes;
@@ -37,4 +34,20 @@ private:
     uint winSize;
     uint hopSize;
 };
+
+class AubioDevice : public QThread
+{
+    Q_OBJECT
+
+    void run() override;
+
+public:
+    explicit AubioDevice(AubioReader *parent = nullptr)
+        : audioInput(parent) {}
+    virtual ~AubioDevice() override {}
+
+private:
+    AubioReader * audioInput;
+};
+
 #endif // AUDIODEVICE_H

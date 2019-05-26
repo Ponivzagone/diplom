@@ -7,17 +7,22 @@
 #include <QScopedPointer>
 #include <memory>
 
+#include <QWaitCondition>
+#include <QMutex>
+
 #include <aubio/aubio.h>
 
+#include <iostream>
 #include "AlgorithManager.h"
 
-class QtAudioDevice;
+#define DIVIDER 32
+
 
 struct Sample {
 
     Sample() {}
-    Sample(quint32 _winSize) : amplitude(new quint32[_winSize]), fillSize(0), winSize(_winSize) {}
-    Sample(const Sample & tmp) : amplitude(new quint32[tmp.winSize]), fillSize(tmp.fillSize), winSize(tmp.winSize)
+    Sample(quint32 _winSize) : amplitude(new float[_winSize]), fillSize(0), winSize(_winSize), uniqSampleHop(0) {}
+    Sample(const Sample & tmp) : amplitude(new float[tmp.winSize]), fillSize(tmp.fillSize), winSize(tmp.winSize)
     {
         memcpy(amplitude, tmp.amplitude, sizeof(quint32) * tmp.winSize);
     }
@@ -38,7 +43,7 @@ struct Sample {
     {
         for(quint32 i = fillSize; i < winSize; i++)
         {
-            amplitude[i] = 0;
+            amplitude[i] = 0.0f;
         }
     }
 
@@ -47,7 +52,7 @@ struct Sample {
         std::shared_ptr<fvec_t> tmp((fvec_t *)calloc(sizeof(fvec_t),1), [](fvec_t * tmp){
                                                                     free(tmp);
                                                                 });
-        tmp->data =  reinterpret_cast<smpl_t * >(this->amplitude);//полная хуйня
+        tmp->data =  this->amplitude;
         tmp->length = winSize;
         return tmp;
     }
@@ -56,16 +61,29 @@ struct Sample {
     {
         if(in->length != winSize) {
             throw std::runtime_error("aubio FFT winSize != input signal length");
-            return;
         }
-        in->data = reinterpret_cast<smpl_t * >(this->amplitude);//полная хуйня
+        in->data = this->amplitude;
+    }
+
+    void convertAubioHop(fvec_t * in, uint numUniqHop)
+    {
+        if(getHopSize() != in->length)
+        {
+            throw std::runtime_error("aubio FFT winSize != input signal length");
+        }
+        in->data = this->amplitude + (winSize - getHopSize() * numUniqHop);
+    }
+
+    uint getHopSize()
+    {
+        return winSize / DIVIDER;
     }
 
 
-
-    quint32 * amplitude = nullptr;
-    quint32 fillSize;
-    quint32 winSize;
+    smpl_t  * amplitude = nullptr;
+    quint32   uniqSampleHop;
+    quint32   fillSize;
+    quint32   winSize;
 };
 
 
@@ -74,43 +92,56 @@ class AudioInput : public QObject {
     Q_OBJECT
 
 public:
+
+    enum statusByte { record = 2 };
+
     explicit AudioInput(QObject *parent = nullptr);
     virtual ~AudioInput() = 0;
 
     virtual void stop()  = 0;
     virtual void start() = 0;
 
-
-    uint_t getWinSize() const;
-    uint_t getHopSize() const;
-
-    void setSamples(std::shared_ptr<quint32> samples, unsigned int sizeSample);
+    void setSamples(std::shared_ptr<float> samples, unsigned int sizeSample);
 
 protected:
 
-    void initSampleBuffer();
-
     QScopedPointer<AlgorithManager> algo;
 
-    std::list< std::shared_ptr< Sample > > * sampleBuffer;
+    std::list< std::shared_ptr< Sample > > * sampleBuffer = nullptr;
+    void initSampleBuffer();
 
-    quint32 winSize;
-    quint32 hopSize;
+    uint sampleRate;
+    uint bitRate;
+    uint winSize;
+    uint hopSize;
+
+    QString sourcePath;
+
+    bool isRecord();
+    void changeRecordStatus();
+     int status;
 
 private:
     void checkAndCopySample(std::shared_ptr<Sample> block,
-                                        std::shared_ptr<quint32> sample,
+                                        std::shared_ptr<float> sample,
                                         unsigned int size);
 
-    void setLastSample();
-
 signals:
-    void finish();
+    void finishAlgo();
+    void recFinished();
+
 public slots:
-    void delList();
+    void stopRecord();
+    void startRecord();
+    void startAlgo();
+
+    void configHandler(uint key);
 };
 
+class QtAudioDevice;
 class QtReader : public  AudioInput {
+
+    friend QtAudioDevice;
 
 public:
     QtReader();
@@ -134,26 +165,32 @@ public slots:
 
 };
 
+class AubioDevice;
 class AubioReader : public  AudioInput {
 
+    friend AubioDevice;
+
 public:
+
     AubioReader();
     virtual ~AubioReader();
 
     void stop();
     void start();
 
-
-protected:
-
 private:
 
-    char_t * sourcePath;
+    AubioDevice * audioDevice;
     aubio_source_t * source;
 
-    uint_t sampleRate;
+
+    QMutex record_mutex;
+    QWaitCondition record_cond;
+
+    bool done;
 
 signals:
+
 
 public slots:
 

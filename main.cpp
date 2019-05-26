@@ -10,17 +10,25 @@
 
 #include <unistd.h>
 
+#include <settings/config_reader.h>
+
 
 #include "AudioInput.h"
 
 int main(int argc, char * argv[]) {
+    ConfigReader::instance();
+
+    ConfigReader::instance().setValue<uint>(CoreSettings::frame_size, 1024);
+    ConfigReader::instance().setValue<uint>(CoreSettings::bit_rate, 16);
+    ConfigReader::instance().setValue<uint>(CoreSettings::sample_rate, 0);
+    ConfigReader::instance().setValue<QString>(CoreSettings::source_path, "/srv/download/gamma.wav");
+
 
     QCoreApplication app(argc, argv);
-
-    QtReader jopa;
-    jopa.start();
-    QTimer::singleShot(5000, &jopa, &AudioInput::delList);
-    QObject::connect(&jopa, &AudioInput::finish, &app, QCoreApplication::quit);
+    AubioReader jopa;
+    QObject::connect(&jopa, &AudioInput::finishAlgo, &app, QCoreApplication::quit);
+    QTimer::singleShot(500, &jopa, &AudioInput::startRecord);
+    QTimer::singleShot(800, &jopa, &AudioInput::stopRecord);
     return app.exec();
 }
 
@@ -61,7 +69,7 @@ void fvec_copy_to_start(const fvec_t * src, const uint_t ind_beg_src, fvec_t * d
 #include <complex>
 
 
-int kkmain(int argc, char * argv[]) {
+int maijhn(int argc, char * argv[]) {
 
 
     uint_t samplerate = 0;

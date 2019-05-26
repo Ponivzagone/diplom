@@ -3,6 +3,7 @@
 
 #include <QScopedPointer>
 #include <list>
+#include <NeuroNet/recognition.h>
 #include <memory>
 #include <aubio/aubio.h>
 
@@ -16,7 +17,7 @@ class AlgorithManager
 {
 public:
     AlgorithManager() = delete;
-    AlgorithManager(uint_t winSize, uint_t hopSize);
+    AlgorithManager(uint _winSize, uint _hopSize, uint _sampleRate);
     ~AlgorithManager();
 
     void algLoop( std::list< std::shared_ptr< Sample > > & sampleBuffer );
@@ -30,11 +31,12 @@ public:
 private:
 
 
-    uint_t winSize;
+    uint winSize;
 
 
     QScopedPointer<AudioFFT> spectrumeAnalyze;
     QScopedPointer<TempoDetecting> beatTracker;
+    QScopedPointer<Recognition> noteDetector;
 
 
 

@@ -2,14 +2,9 @@
 #include <qendian.h>
 #include <QDebug>
 
-QtAudioDevice::QtAudioDevice(const QAudioFormat &format, AudioInput *parent)
-    : audioInput(parent), format(format), fillSize(0)
+QtAudioDevice::QtAudioDevice(const QAudioFormat &format, QtReader *parent)
+    : audioInput(parent), format(format)
 {
-    buffer =  new quint32[audioInput->getWinSize()];
-
-    winSize = audioInput->getWinSize();
-    hopSize = audioInput->getHopSize();
-
     Q_ASSERT(format.sampleSize() % 8 == 0);
     channelBytes = format.sampleSize() / 8;
     sampleBytes = format.channelCount() * channelBytes;
@@ -17,7 +12,6 @@ QtAudioDevice::QtAudioDevice(const QAudioFormat &format, AudioInput *parent)
 
 QtAudioDevice::~QtAudioDevice()
 {
-    delete [] buffer;
 }
 
 void QtAudioDevice::start()
@@ -36,7 +30,6 @@ qint64 QtAudioDevice::readData(char *data, qint64 maxSize)
     Q_UNUSED(maxSize)
     return -1;
 }
-#include <iostream>
 
 qint64 QtAudioDevice::writeData(const char *data, qint64 maxSize)
 {
@@ -44,8 +37,7 @@ qint64 QtAudioDevice::writeData(const char *data, qint64 maxSize)
     Q_ASSERT(maxSize % sampleBytes == 0);
     const int numSamples = maxSize / sampleBytes;
     const unsigned char * ptr = reinterpret_cast<const unsigned char *>(data);
-    std::shared_ptr<quint32> buffer(new quint32[numSamples], [](quint32 *p) {
-        qDebug() << "buffer~shared_ptr" << endl;
+    std::shared_ptr<float> buffer(new float[numSamples], [](float *p) {
         delete[] p;
     });
 
@@ -87,10 +79,40 @@ qint64 QtAudioDevice::writeData(const char *data, qint64 maxSize)
             sumChanel += value;
             ptr += channelBytes;
         }
-        buffer.get()[i] = sumChanel;
+        buffer.get()[i] = static_cast<float>(sumChanel);
     }
     audioInput->setSamples(buffer, numSamples);
 
     return maxSize;
 }
 
+
+void AubioDevice::run()
+{
+    uint_t read = 0;
+    fvec_t * in = new_fvec(audioInput->hopSize);
+    audioInput->done = false;
+
+    std::shared_ptr<float> tmp(new float[audioInput->hopSize], [](float * p){
+        delete [] p;
+    });
+    int i = 1;
+    do {
+        std::cout << "r" << i++ << " " << std::endl;
+        aubio_source_do(audioInput->source, in, &read);
+        std::memcpy(tmp.get(), in->data, in->length * sizeof(float));
+
+
+        audioInput->setSamples(tmp, audioInput->hopSize);
+
+        audioInput->record_cond.wakeAll();
+
+
+    } while( read == audioInput->hopSize && (audioInput->isRecord()) );
+
+    del_fvec(in);
+    audioInput->done = true;
+    audioInput->record_cond.wakeAll();
+
+    std::cout << "  norm stop  ";
+}

@@ -2,11 +2,14 @@
 #define AUDIOTOOLS_H
 
 #include <aubio/aubio.h>
+#include <memory>
+
+struct Sample;
 
 class TempoDetecting {
 public:
     virtual ~TempoDetecting() = 0;
-    virtual void detecting( const fvec_t * in ) = 0;
+    virtual void detecting( const std::shared_ptr< Sample > in  ) = 0;
 
     virtual smpl_t getTempo() = 0;
 };
@@ -21,13 +24,14 @@ public:
     AubioTempo & operator=(const AubioTempo & rhs) = delete;
     ~AubioTempo();
 
-    void  detecting( const fvec_t * in );
+    void  detecting( const std::shared_ptr< Sample > in );
 
     smpl_t getTempo();
 
 private:
     aubio_tempo_t * tempo;
     fvec_t        * out;
+    fvec_t        * fftIn;
 
     smpl_t          previousTempo;
 };
