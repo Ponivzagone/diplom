@@ -25,7 +25,7 @@ void AubioTempo::detecting(const std::shared_ptr< Sample > in) {
         in->convertAubioHop(fftIn, i);
         aubio_tempo_do(tempo, fftIn, out);
         if (out->data[0] != 0.0f) {
-            previousTempo= out->data[0];
+            previousTempo = aubio_tempo_get_bpm(tempo);
         }
     }
 }
@@ -36,5 +36,5 @@ AubioTempo::~AubioTempo() {
 }
 
 smpl_t AubioTempo::getTempo() {
-    return aubio_tempo_get_bpm(tempo);
+    return previousTempo;
 }

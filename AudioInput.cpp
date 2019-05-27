@@ -7,6 +7,48 @@
 #include <cstring>
 
 
+
+void Sample::setEmpthy()
+{
+    for(quint32 i = fillSize; i < winSize; i++)
+    {
+        amplitude[i] = 0.0f;
+    }
+}
+
+std::shared_ptr<fvec_t> Sample::convertAubio()
+{
+    std::shared_ptr<fvec_t> tmp((fvec_t *)calloc(sizeof(fvec_t),1), [](fvec_t * tmp){
+                                                                free(tmp);
+                                                            });
+    tmp->data =  this->amplitude;
+    tmp->length = winSize;
+    return tmp;
+}
+
+void Sample::convertAubio(fvec_t * in)
+{
+    if(in->length != winSize) {
+        throw std::runtime_error("convert winSize != input signal length");
+    }
+    in->data = this->amplitude;
+}
+
+void Sample::convertAubioHop(fvec_t * in, uint numUniqHop)
+{
+    if(getHopSize() != in->length)
+    {
+        throw std::runtime_error("convert hopSize != input signal length");
+    }
+    in->data = this->amplitude + (winSize - getHopSize() * numUniqHop);
+}
+
+uint Sample::getHopSize()
+{
+    return winSize / DIVIDER;
+}
+
+
 AudioInput::AudioInput(QObject * parent)
     : QObject(parent), winSize(0), hopSize(0), sampleRate(0), status(0)
 {

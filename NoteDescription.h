@@ -2,11 +2,13 @@
 #define NOTE_DESCRIPTION_H
 
 #include <list>
-
+#include <memory>
 
 class symbol {
 public:
+    typedef std::shared_ptr<symbol> SPtr;
     virtual ~symbol() = 0;
+    virtual void render() = 0;
 
 };
 
@@ -20,7 +22,8 @@ public:
 class sign_alter : public symbol {
 
 public:
-    ~sign_alter();
+    virtual ~sign_alter();
+    virtual void render();
 
 };
 
@@ -28,7 +31,8 @@ public:
 class pause : public symbol {
 public:
     pause();
-    ~pause();
+    virtual ~pause();
+    virtual void render();
 private:
     duration _duration;
 
@@ -38,8 +42,8 @@ private:
 class note : public symbol {
 public:
     note();
-    ~note();
-
+    virtual ~note();
+    virtual void render();
 private:
     duration _duration;
     sign_alter _sign_alter;
@@ -48,8 +52,8 @@ private:
 class block_note : public note {
 public:
     block_note();
-    ~block_note();
-
+    virtual ~block_note();
+    virtual void render();
 private:
     std::list<note> _notes;
 };
@@ -60,9 +64,11 @@ class tact {
 public:
     tact();
 
+    ~tact();
 private:
+    std::list<symbol::SPtr> _notes;
 
-    std::list<symbol *> _notes;
+
 };
 
 #endif // NOTE_DESCRIPTION_H

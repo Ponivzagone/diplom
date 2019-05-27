@@ -21,14 +21,14 @@ int main(int argc, char * argv[]) {
     ConfigReader::instance().setValue<uint>(CoreSettings::frame_size, 1024);
     ConfigReader::instance().setValue<uint>(CoreSettings::bit_rate, 16);
     ConfigReader::instance().setValue<uint>(CoreSettings::sample_rate, 0);
-    ConfigReader::instance().setValue<QString>(CoreSettings::source_path, "/srv/download/gamma.wav");
+    ConfigReader::instance().setValue<QString>(CoreSettings::source_path, "/srv/download/gamma1.wav");
 
 
     QCoreApplication app(argc, argv);
     AubioReader jopa;
     QObject::connect(&jopa, &AudioInput::finishAlgo, &app, QCoreApplication::quit);
     QTimer::singleShot(500, &jopa, &AudioInput::startRecord);
-    QTimer::singleShot(800, &jopa, &AudioInput::stopRecord);
+    //QTimer::singleShot(800, &jopa, &AudioInput::stopRecord);
     return app.exec();
 }
 

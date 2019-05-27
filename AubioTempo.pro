@@ -25,6 +25,7 @@ SOURCES += \
         NeuroNet/recognition.cpp \
         NeuroNet/trainingSet.cpp \
         NoteDescription.cpp \
+        NoteListBuilder.cpp \
         main.cpp \
         settings/config_reader.cpp \
         settings/settings.cpp
@@ -47,5 +48,6 @@ HEADERS += \
     NeuroNet/recognition.h \
     NeuroNet/trainingSet.h \
     NoteDescription.h \
+    NoteListBuilder.h \
     settings/config_reader.h \
     settings/settings.h

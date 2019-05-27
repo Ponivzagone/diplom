@@ -3,6 +3,8 @@
 
 #include <QScopedPointer>
 #include <list>
+#include <NeuroNet/net.h>
+#include <NeuroNet/trainingSet.h>
 #include <NeuroNet/recognition.h>
 #include <memory>
 #include <aubio/aubio.h>
@@ -10,8 +12,11 @@
 
 #include "AudioFFT.h"
 #include "AudioTempo.h"
+#include "NoteListBuilder.h"
 
 struct Sample;
+
+
 
 class AlgorithManager
 {
@@ -36,7 +41,8 @@ private:
 
     QScopedPointer<AudioFFT> spectrumeAnalyze;
     QScopedPointer<TempoDetecting> beatTracker;
-    QScopedPointer<Recognition> noteDetector;
+    QScopedPointer<Net> net;
+    QScopedPointer<NoteListBuilder> pageBuilder;
 
 
 

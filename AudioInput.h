@@ -39,45 +39,17 @@ struct Sample {
     }
     ~Sample() { if(amplitude) { delete [] amplitude; } }
 
-    void setEmpthy()
-    {
-        for(quint32 i = fillSize; i < winSize; i++)
-        {
-            amplitude[i] = 0.0f;
-        }
-    }
+    void setEmpthy();
 
-    std::shared_ptr<fvec_t> convertAubio()
-    {
-        std::shared_ptr<fvec_t> tmp((fvec_t *)calloc(sizeof(fvec_t),1), [](fvec_t * tmp){
-                                                                    free(tmp);
-                                                                });
-        tmp->data =  this->amplitude;
-        tmp->length = winSize;
-        return tmp;
-    }
+    std::shared_ptr<fvec_t> convertAubio();
 
-    void convertAubio(fvec_t * in)
-    {
-        if(in->length != winSize) {
-            throw std::runtime_error("aubio FFT winSize != input signal length");
-        }
-        in->data = this->amplitude;
-    }
 
-    void convertAubioHop(fvec_t * in, uint numUniqHop)
-    {
-        if(getHopSize() != in->length)
-        {
-            throw std::runtime_error("aubio FFT winSize != input signal length");
-        }
-        in->data = this->amplitude + (winSize - getHopSize() * numUniqHop);
-    }
+    void convertAubio(fvec_t * in);
 
-    uint getHopSize()
-    {
-        return winSize / DIVIDER;
-    }
+
+    void convertAubioHop(fvec_t * in, uint numUniqHop);
+
+    uint getHopSize();
 
 
     smpl_t  * amplitude = nullptr;
