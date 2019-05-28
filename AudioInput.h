@@ -10,8 +10,6 @@
 #include <QWaitCondition>
 #include <QMutex>
 
-#include <aubio/aubio.h>
-
 #include <iostream>
 #include "AlgorithManager.h"
 
@@ -21,7 +19,9 @@
 struct Sample {
 
     Sample() {}
-    Sample(quint32 _winSize) : amplitude(new float[_winSize]), fillSize(0), winSize(_winSize), uniqSampleHop(0) {}
+    Sample(quint32 _winSize) : amplitude(new float[_winSize]), fillSize(0), winSize(_winSize), uniqSampleHop(0) {
+         std::memset(amplitude, 0.0f, sizeof(float) * winSize);
+    }
     Sample(const Sample & tmp) : amplitude(new float[tmp.winSize]), fillSize(tmp.fillSize), winSize(tmp.winSize)
     {
         memcpy(amplitude, tmp.amplitude, sizeof(quint32) * tmp.winSize);

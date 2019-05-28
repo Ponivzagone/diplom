@@ -65,18 +65,19 @@ AudioInput::AudioInput(QObject * parent)
 
 void AudioInput::checkAndCopySample(std::shared_ptr<Sample> block, std::shared_ptr<float> sample, unsigned int size)
 {
-    if( (size + block->fillSize) <= block->winSize ) {
-        std::memcpy((block->amplitude + block->fillSize), (sample.get()) , sizeof(float) * size);
+    uint freePos = block->winSize - block->getHopSize() + block->fillSize;
+
+    if( (size + block->fillSize) <= block->getHopSize() ) {
+        std::memcpy( (block->amplitude + freePos), (sample.get()) , sizeof(float) * size);
         block->fillSize += size;        
     } else {
 
-        quint32 newSizeSample = winSize - block->fillSize;
-        std::memcpy(block->amplitude + block->fillSize, (sample.get()), sizeof(float) * newSizeSample);
+        uint newSizeSample = block->getHopSize() - block->fillSize;
+        std::memcpy(block->amplitude + freePos, (sample.get()), sizeof(float) * newSizeSample);
         block->fillSize += newSizeSample;
 
-        quint32 cutSampleSize = size - newSizeSample;
+        uint cutSampleSize = size - newSizeSample;
         std::shared_ptr<float> cutSample(new float[cutSampleSize], [](float *p) {
-             qDebug() << "cut~Shared" << endl;
              delete[] p;
         });
         std::memcpy(cutSample.get(), (sample.get() + newSizeSample), sizeof(float) * cutSampleSize);
@@ -88,14 +89,14 @@ void AudioInput::setSamples(std::shared_ptr<float> sample, unsigned int sizeSamp
 {
     std::shared_ptr< Sample > prevBlock = sampleBuffer->back();
 
-    if (prevBlock->fillSize >= prevBlock->winSize) {
+    if (prevBlock->fillSize >= prevBlock->getHopSize()) {
         std::shared_ptr< Sample > newBlock( new Sample(winSize));
         newBlock->uniqSampleHop++;
 
         std::memcpy(newBlock->amplitude, prevBlock->amplitude, sizeof(float) * prevBlock->winSize);
 
         std::rotate(newBlock->amplitude, newBlock->amplitude + hopSize, newBlock->amplitude + winSize);
-        newBlock->fillSize = newBlock->winSize - hopSize;
+        newBlock->fillSize = 0;
         sampleBuffer->push_back(newBlock);
         checkAndCopySample(newBlock, sample, sizeSample);
 
