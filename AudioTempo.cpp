@@ -20,14 +20,12 @@ AubioTempo::AubioTempo(const uint_t winSize,
 
 void AubioTempo::detecting(const std::shared_ptr< Sample > in) {
 
-    for(uint i = in->uniqSampleHop; i >= 1; --i)
-    {
-        in->convertAubioHop(fftIn, i);
-        aubio_tempo_do(tempo, fftIn, out);
-        if (out->data[0] != 0.0f) {
-            previousTempo = aubio_tempo_get_bpm(tempo);
-        }
+    in->convertAubioHop(fftIn);
+    aubio_tempo_do(tempo, fftIn, out);
+    if (out->data[0] != 0.0f) {
+        previousTempo = aubio_tempo_get_bpm(tempo);
     }
+
 }
 
 AubioTempo::~AubioTempo() {

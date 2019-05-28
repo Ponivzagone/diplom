@@ -10,7 +10,7 @@
 
 void Sample::setEmpthy()
 {
-    for(quint32 i = fillSize; i < winSize; i++)
+    for(quint32 i = winSize - (getHopSize() - fillSize); i < winSize; i++)
     {
         amplitude[i] = 0.0f;
     }
@@ -34,13 +34,14 @@ void Sample::convertAubio(fvec_t * in)
     in->data = this->amplitude;
 }
 
-void Sample::convertAubioHop(fvec_t * in, uint numUniqHop)
+void Sample::convertAubioHop(fvec_t * in)
 {
     if(getHopSize() != in->length)
     {
         throw std::runtime_error("convert hopSize != input signal length");
     }
-    in->data = this->amplitude + (winSize - getHopSize() * numUniqHop);
+    int offset = (winSize - getHopSize());
+    in->data = this->amplitude + offset;
 }
 
 uint Sample::getHopSize()
@@ -91,7 +92,6 @@ void AudioInput::setSamples(std::shared_ptr<float> sample, unsigned int sizeSamp
 
     if (prevBlock->fillSize >= prevBlock->getHopSize()) {
         std::shared_ptr< Sample > newBlock( new Sample(winSize));
-        newBlock->uniqSampleHop++;
 
         std::memcpy(newBlock->amplitude, prevBlock->amplitude, sizeof(float) * prevBlock->winSize);
 
@@ -99,9 +99,7 @@ void AudioInput::setSamples(std::shared_ptr<float> sample, unsigned int sizeSamp
         newBlock->fillSize = 0;
         sampleBuffer->push_back(newBlock);
         checkAndCopySample(newBlock, sample, sizeSample);
-
     } else {
-        prevBlock->uniqSampleHop++;
         checkAndCopySample(prevBlock, sample, sizeSample);
     }
 }

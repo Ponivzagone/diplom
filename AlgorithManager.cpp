@@ -38,11 +38,12 @@ void AlgorithManager::algLoop(std::list<std::shared_ptr<Sample> > & sampleBuffer
     for(auto& sample : sampleBuffer)
     {
         sample->setEmpthy();
-        algStep(sample);
+        int code = algStep(sample);
 
         tempoRanged.push_back(beatTracker->getTempo());
 
-        net->getResults(results);
+        results.clear();
+        if(!code) { net->getResults(results); }
         pageBuilder->selectionNotes(results);
 
 
@@ -55,7 +56,7 @@ void AlgorithManager::algLoop(std::list<std::shared_ptr<Sample> > & sampleBuffer
     pageBuilder->render();
 }
 
-void AlgorithManager::algStep(std::shared_ptr<Sample> & sample)
+int AlgorithManager::algStep(std::shared_ptr<Sample> & sample)
 {
     beatTracker->detecting(sample);
 
@@ -73,12 +74,14 @@ void AlgorithManager::algStep(std::shared_ptr<Sample> & sample)
         max = std::max(max, input.back());
     }
 
+    if(max < 6.0) { return 1; }
+
     unsigned lenght = input.size();
     for(unsigned i = 0; i < lenght; ++i)
     {
         input[i] = input[i] / max;
     }
     net->feedForward(input);
-
+    return 0;
 }
 

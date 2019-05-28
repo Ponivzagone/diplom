@@ -9,59 +9,94 @@ public:
     typedef std::shared_ptr<symbol> SPtr;
     virtual ~symbol() = 0;
     virtual void render() = 0;
+    virtual double getDuration() = 0;
+    virtual double setDuration() = 0;
 
 };
+
 
 
 class duration {
-public:
      duration();
-     duration(double _time);
     ~duration();
-private:
-    double time;
+
+     static std::pair<int, double> dur[7];
+public:
+
+    static std::pair<int, double> roundToNear(double time);
+
+    static void initDurtion(double secInBeat, double minTime);
+
+    static std::string render(double time);
+
 };
 
-class sign_alter : public symbol {
+
+
+class sign_alter {
 
 public:
-    virtual ~sign_alter();
-    virtual void render();
+    ~sign_alter();
+    void render();
 
 };
+
 
 
 class pause : public symbol {
 public:
     pause();
-    pause(const duration & time);
+    pause(double dur);
     virtual ~pause();
     virtual void render();
+    virtual double getDuration() const;
+    virtual double setDuration(double _dur);
+
+    friend bool operator==(const pause & lhs, const pause & rhs);
+    friend bool operator!=(const pause &lhs, const pause &rhs);
 private:
-    duration _duration;
+    double _duration;
 
 };
+
+
 
 
 class note : public symbol {
 public:
     note();
-    note(const duration & time, ushort ind);
+    note(ushort ind, double dur);
     virtual ~note();
     virtual void render();
+    virtual double getDuration() const;
+    virtual double setDuration(double _dur);
+
+    friend bool operator==(const note & lhs, const note & rhs);
+    friend bool operator!=(const note &lhs, const note &rhs);
 private:
-    duration _duration;
-    ushort index;
+    double _duration;
+    ushort _index;
     sign_alter _sign_alter;
+
+    bool leag;
 };
 
-class block_note : public symbol {
+
+
+
+class block_note {
 public:
     block_note();
-    virtual ~block_note();
-    virtual void render();
+    ~block_note();
+    void render();
 
     void addNote(symbol::SPtr note);
+    void merge(std::shared_ptr<block_note> el);
+
+
+
+    friend bool operator==(const block_note & lhs, const block_note & rhs);
+
 private:
     std::list<symbol::SPtr> _notes;
 };
@@ -73,20 +108,21 @@ private:
 class tact {
 
 public:
-    tact(double _secInbeat);
+    tact(double _secInbeat, double _minTime);
     ~tact();
 
-    void setSymbol(symbol::SPtr sym);
+    void setSymbol(std::shared_ptr<block_note> sym);
 
-
+    void reorgTact();
 
     bool exitRange(double & time);
 
 private:
-    std::list<symbol::SPtr> _notes;
+    std::list< std::shared_ptr<block_note> > _notes;
 
     double secInBeat;
     double sizeTact;
+    double minTime;
 };
 
 #endif // NOTE_DESCRIPTION_H

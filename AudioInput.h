@@ -10,6 +10,8 @@
 #include <QWaitCondition>
 #include <QMutex>
 
+#include <cstring>
+
 #include <iostream>
 #include "AlgorithManager.h"
 
@@ -47,7 +49,7 @@ struct Sample {
     void convertAubio(fvec_t * in);
 
 
-    void convertAubioHop(fvec_t * in, uint numUniqHop);
+    void convertAubioHop(fvec_t * in);
 
     uint getHopSize();
 

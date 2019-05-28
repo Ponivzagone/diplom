@@ -27,7 +27,7 @@ public:
 
     void algLoop( std::list< std::shared_ptr< Sample > > & sampleBuffer );
 
-    void algStep( std::shared_ptr< Sample > & sample );
+    int algStep( std::shared_ptr< Sample > & sample );
 
 
 

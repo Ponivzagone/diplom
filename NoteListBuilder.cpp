@@ -18,13 +18,11 @@ NoteListBuilder::~NoteListBuilder()
 void NoteListBuilder::buildPage(float _tempo)
 {
     tempo = static_cast<double>(_tempo);
+    timer = 0.0;
 
     double beatInSec = tempo / 60.0;
     double secInBeat = 60.0 / tempo;
 
-    double startOffset = static_cast<double>(winSize) / static_cast<double>(sampleRate);
-    startOffset -= offset;
-    timer += startOffset;
     page.push_back(tact(secInBeat));
 
 
@@ -33,31 +31,33 @@ void NoteListBuilder::buildPage(float _tempo)
         auto & lastTact = page.back();
 
 
-         block_note * blockNote(new block_note());
+        block_note blockNote;
 
         for(auto & noteIndex : block)
         {
             symbol::SPtr n;
             if(noteIndex != 0) {
-                n = std::make_shared<note>(note( duration(offset + startOffset), noteIndex ));
+                n = std::make_shared<note>(note( offset, noteIndex ));
             } else {
-                n = std::make_shared<pause>(pause( duration(offset + startOffset) ));
+                n = std::make_shared<pause>(pause( offset ));
             }
 
-            blockNote->addNote(n);
+            blockNote.addNote(n);
         }
 
-        lastTact.setSymbol(std::shared_ptr<symbol>(blockNote));
+        lastTact.setSymbol(std::make_shared<block_note>(blockNote));
 
         timer += offset;
 
         if(lastTact.exitRange(timer)) {
+            page.back().reorgTact();
             page.push_back(tact(secInBeat));
         }
 
-        startOffset = 0.0;
     }
 }
+
+#include <iostream>
 
 void NoteListBuilder::selectionNotes(std::vector<double> & probability)
 {
@@ -67,7 +67,7 @@ void NoteListBuilder::selectionNotes(std::vector<double> & probability)
     for(auto& note : probability)
     {
         ++index;
-        if(note > 0.7)
+        if(note > 0.8)
         {
             blockNote.push_back(index);
         }

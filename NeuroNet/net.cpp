@@ -31,7 +31,6 @@ Net::Net(const std::vector<unsigned> &topology)
 
 void Net::getResults(std::vector<double> &resultVals) const
 {
-	resultVals.clear();
 
 	for (unsigned n = 0; n < layers.back().size() - 1; ++n)
 	{
