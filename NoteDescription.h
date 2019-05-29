@@ -10,7 +10,7 @@ public:
     virtual ~symbol() = 0;
     virtual void render() = 0;
     virtual double getDuration() = 0;
-    virtual double setDuration() = 0;
+    virtual double setDuration(double _dur) = 0;
 
 };
 
@@ -93,6 +93,9 @@ public:
     void addNote(symbol::SPtr note);
     void merge(std::shared_ptr<block_note> el);
 
+    void durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr<block_note> next);
+
+    ushort noteExits(std::shared_ptr<block_note> block);
 
 
     friend bool operator==(const block_note & lhs, const block_note & rhs);

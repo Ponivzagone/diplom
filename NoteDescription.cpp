@@ -195,13 +195,33 @@ void block_note::merge(std::shared_ptr<block_note> el)
     std::list<symbol::SPtr> & elL = el.get()->_notes;
     for(auto itE = elL.begin(); itE != elL.end(); ++itE)
     {
-
+        it->get()->setDuration(itE->get()->getDuration());
     }
     return;
 }
 
+void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr<block_note> next)
+{
+    auto itE = _notes.end();
+
+    for(auto it = _notes.begin(); it != itE; ++it )
+    {
+        if( !(duration::roundToNear(it->get()->getDuration()).first) ) {
+
+        }
+    }
+}
+
+ushort block_note::noteExits(std::shared_ptr<block_note> block)
+{
+
+}
+
 bool operator==(const block_note &lhs, const block_note &rhs)
 {
+
+    //TODO: вынеси сравнение ноты и пазуы в символ и сделай виртуальный метод получения indexa у паузы 0 у ноты индекс
+
 
     if(lhs._notes.size() != rhs._notes.size()) return false;
 
@@ -276,8 +296,24 @@ void tact::reorgTact()
             ++it;
         }
 
+    }
+
+    for(auto it = _notes.begin(); it != end;)
+    {
+
+        auto itN = std::next(it, 1);
+        auto itP = std::prev(it, 1);
+
+        if(itP == end && itN != end) { it->get()->durationAlive(nullptr, *itN); continue; }
+        if(itN == end && itP != end) { it->get()->durationAlive(*itP, nullptr); continue; }
+
+        it->get()->durationAlive(*itP, *itN);
+
+
+
 
     }
+
 }
 
 bool tact::exitRange(double & time)
