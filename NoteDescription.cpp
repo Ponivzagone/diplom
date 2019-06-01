@@ -1,9 +1,32 @@
+
 #include "NoteDescription.h"
-#include <sstream>
 #include <iterator>
+#include <sstream>
+#include <limits>
+#include <algorithm>
+
+bool equals(const double & A, const double & B)
+{
+    return (std::abs(A - B) < std::numeric_limits<double>::epsilon());
+}
+
 
 symbol::~symbol() {
 
+}
+
+
+bool operator==(symbol::SPtr lhs, symbol::SPtr rhs)
+{
+    if(lhs->getIndex() != rhs->getIndex()) { return false; }
+    //if( !equals( lhs->getDuration(), rhs->getDuration() ) ) { return false; }
+    return true;
+}
+
+bool operator!=(symbol::SPtr lhs, symbol::SPtr rhs)
+{
+    if(lhs == rhs) { return false; }
+    return true;
 }
 
 
@@ -39,7 +62,7 @@ std::pair<int, double> duration::roundToNear(double time)
     {
         if(  std::abs(time - dur[i].second)
              <
-           ( dur[i + 1].second - dur[i].second ) / 2 )
+           ( dur[i + 1].second - dur[i].second ) / LENGTHTONEXTDUR )
         {
             return dur[i];
         }
@@ -53,16 +76,10 @@ void duration::initDurtion(double tactSize, double minTime)
     dur[k++] = std::make_pair(0, minTime);
     dur[k++] = std::make_pair(32, tactSize / 32);
     dur[k++] = std::make_pair(16, tactSize / 16);
-    dur[k++] = std::make_pair(4, tactSize / 4);
     dur[k++] = std::make_pair(8, tactSize / 8);
+    dur[k++] = std::make_pair(4, tactSize / 4);
     dur[k++] = std::make_pair(2, tactSize / 2);
     dur[k++] = std::make_pair(1, tactSize);
-}
-
-#include <limits>
-bool equals(const double & A, const double & B)
-{
-    return (std::abs(A - B) < std::numeric_limits<double>::epsilon());
 }
 
 std::string duration::render(double time)
@@ -94,9 +111,13 @@ pause::~pause() {
 
 }
 
-void pause::render()
+void pause::render(std::string & ss)
 {
-
+    ss.append( "r");
+    std::stringstream s;
+    s << duration::roundToNear(_duration).first;
+    ss.append( s.str());
+    ss.append( " ");
 }
 
 double pause::getDuration() const
@@ -104,9 +125,14 @@ double pause::getDuration() const
     return _duration;
 }
 
-double pause::setDuration(double _dur)
+void pause::setDuration(double _dur)
 {
     _duration = _dur;
+}
+
+ushort pause::getIndex() const
+{
+    return 0;
 }
 
 bool operator==(const pause &lhs, const pause &rhs)
@@ -138,9 +164,74 @@ note::~note() {
 
 }
 
-void note::render()
+void note::render(std::string & ss)
 {
+    ss.append(this->nameEncode());
+    if(_index > 52)
+    {
+        ss.append( "'");
+    }
+    if(!this->inTonal())
+    {
+        ss.append("es");
+    }
+    std::stringstream s;
+    s << duration::roundToNear(_duration).first;
+    ss.append( s.str());
+    ss.append(" ");
+}
 
+bool note::inTonal()
+{
+    static uint tonMask[] = {1,3,4,6,8,9,11}; // C_Major
+    if(std::binary_search(tonMask, tonMask + 7, _index % 12)) return true;
+    return false;
+}
+
+char * note::nameEncode()
+{
+    int i = _index % 12;
+    char * a;
+    switch(i)
+    {
+        case 0:
+            a = "g";
+        break;
+        case 1:
+            a = "a";
+        break;
+        case 2:
+            a = "a";
+        break;
+        case 3:
+            a = "b";
+        break;
+        case 4:
+            a = "c";
+        break;
+        case 5:
+            a = "c";
+        break;
+        case 6:
+            a = "d";
+        break;
+        case 7:
+            a = "d";
+        break;
+        case 8:
+            a = "e";
+        break;
+        case 9:
+            a = "f";
+        break;
+        case 10:
+            a = "f";
+        break;
+        case 11:
+            a = "g";
+        break;
+    }
+    return a;
 }
 
 double note::getDuration() const
@@ -148,9 +239,19 @@ double note::getDuration() const
     return _duration;
 }
 
-double note::setDuration(double _dur)
+ushort note::getIndex() const
+{
+    return _index;
+}
+
+void note::setDuration(double _dur)
 {
     _duration = _dur;
+}
+
+void note::setLeag(ushort i)
+{
+    leag = i;
 }
 
 bool operator==(const note &lhs, const note &rhs)
@@ -179,9 +280,12 @@ block_note::~block_note() {
 
 }
 
-void block_note::render()
+void block_note::render(std::string &ss)
 {
-
+    for(auto & sym: _notes)
+    {
+        sym->render(ss);
+    }
 }
 
 void block_note::addNote(symbol::SPtr note)
@@ -195,7 +299,7 @@ void block_note::merge(std::shared_ptr<block_note> el)
     std::list<symbol::SPtr> & elL = el.get()->_notes;
     for(auto itE = elL.begin(); itE != elL.end(); ++itE)
     {
-        it->get()->setDuration(itE->get()->getDuration());
+        it->get()->setDuration(it->get()->getDuration() + itE->get()->getDuration());
     }
     return;
 }
@@ -204,17 +308,117 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
 {
     auto itE = _notes.end();
 
-    for(auto it = _notes.begin(); it != itE; ++it )
-    {
-        if( !(duration::roundToNear(it->get()->getDuration()).first) ) {
+    //auto & PB = prev->_notes;
+    //auto & NB = next->_notes;
 
+    for(auto it = _notes.begin(); it != itE; )
+    {
+        if( !(duration::roundToNear(it->get()->getDuration()).first) )
+        {
+            //если ты огрызок то тебя надо к чему то присунуть назад желательно если нету них то вперед его время пихать
+
+            if(!it->get()->getIndex()) //ты огрызок паузы тебя надо засунуть во все что спереди или сзади // одно типный код ван лавв (придурок)
+            {
+                if(prev)
+                {
+                    auto & PB = prev->_notes;
+                    for(auto itS : PB)
+                    {
+                        itS->setDuration(itS->getDuration() + it->get()->getDuration());
+                    }
+                    it->get()->setDuration(0.0);
+                }
+                else
+                {
+                    auto & NB = next->_notes;
+                    for(auto itS : NB)
+                    {
+                        itS->setDuration(itS->getDuration() + it->get()->getDuration());
+
+                    }
+                    it->get()->setDuration(0.0);
+                }
+                it = _notes.erase(it);
+                continue;
+            }
+            else //ты огрызок ноты тебя надо засунуть вперед к такой же ноте либо спереди либо сзади
+            {
+                if(prev)
+                {
+                    auto & PB = prev->_notes;
+                    for(auto itS : PB)
+                    {
+                        if(*it == itS)
+                        {
+                            itS->setDuration(itS->getDuration() + it->get()->getDuration());
+                            it->get()->setDuration(0.0);
+                        }
+                    }
+                    it = _notes.erase(it);
+                    continue;
+                }
+                else
+                {
+                    auto & NB = next->_notes;
+                    for(auto itS : NB)
+                    {
+                        if(*it == itS)
+                        {
+                            itS->setDuration(itS->getDuration() + it->get()->getDuration());
+                            it->get()->setDuration(0.0);
+                        }
+                    }
+                    it = _notes.erase(it);
+                    continue;
+                }
+            }
         }
+        else // ты не огрызок ты личностьтебя надо либо залиговать с нужной нотой либо кайфую ты пауза
+             // Хотяя хмм а если ты одиночная нота пока оставлю на подумать  тут надо с силой удара разбираться типа
+             // был ли всплеск либо нет(! надо спектр хранить нужной ноты в этот момент времени и смотреть на предыдущий
+             // снимок амплитуда упала значит падаем либо где завести поле амплитуда растет или нет если нет то смело лигуем а растет значит оставляем
+             // об этом чуть позжа
+        {
+//            if(it->get()->getIndex())
+//            {
+//                if(prev)
+//                {
+//                    auto & PB = prev->_notes;
+//                    for(auto itS : PB)
+//                    {
+//                        if(*it == itS)
+//                        {
+//                            note * nn =  dynamic_cast<note *>(itS.get());
+//                            nn->setLeag(1);
+//                        }
+//                    }
+
+//                }
+//                else
+//                {
+//                    auto & NB = next->_notes;
+//                    for(auto itS : NB)
+//                    {
+//                        if(*it == itS)
+//                        {
+
+//                        }
+//                    }
+//                }
+//            }
+        }
+        ++it;
     }
 }
 
 ushort block_note::noteExits(std::shared_ptr<block_note> block)
 {
 
+}
+
+bool block_note::empthy()
+{
+    return _notes.empty();
 }
 
 bool operator==(const block_note &lhs, const block_note &rhs)
@@ -229,30 +433,9 @@ bool operator==(const block_note &lhs, const block_note &rhs)
     auto eL = lhs._notes.end();
     auto iR = rhs._notes.begin();
     auto eR = rhs._notes.end();
-    for( ;iL != eL , iR != eR; ++iL, ++iR )
+    for( ; iL != eL , iR != eR; ++iL, ++iR )
     {
-
-        {
-            auto * pl = dynamic_cast<note * >(iL->get());
-            auto * pr = dynamic_cast<note * >(iR->get());
-
-            if(pl && pr)
-            {
-                if(*pl != *pr) { return false; }
-                continue;
-            }
-        }
-        {
-            auto * pl = dynamic_cast<pause * >(iL->get());
-            auto * pr = dynamic_cast<pause * >(iR->get());
-
-            if(pl && pr)
-            {
-                if(*pl != *pr) { return false; }
-                continue;
-            }
-        }
-        return false;
+        if(*iL != *iR) { return false; }
     }
     return true;
 }
@@ -286,9 +469,9 @@ void tact::reorgTact()
     for(auto it = _notes.begin(); it != end;)
     {
         auto itN = std::next(it, 1);
-        if(itN == end) { continue; }
+        if(itN == end) { break; }
 
-        if(*it == *itN)
+        if(*(it->get()) == *(itN->get()))
         {
             itN->get()->merge(*it);
             it = _notes.erase(it);
@@ -298,22 +481,24 @@ void tact::reorgTact()
 
     }
 
-    for(auto it = _notes.begin(); it != end;)
+    for(auto it = _notes.begin(); it != end; )
     {
 
         auto itN = std::next(it, 1);
         auto itP = std::prev(it, 1);
 
-        if(itP == end && itN != end) { it->get()->durationAlive(nullptr, *itN); continue; }
-        if(itN == end && itP != end) { it->get()->durationAlive(*itP, nullptr); continue; }
+        if(itP == end && itN != end) { it->get()->durationAlive(nullptr, *itN); ++it; continue; }
+        if(itN == end && itP != end) { it->get()->durationAlive(*itP, nullptr); ++it; continue; }
+
+        if(itP == end && itN == end) { break; }
 
         it->get()->durationAlive(*itP, *itN);
 
+        if(it->get()->empthy()) { it = _notes.erase(it); continue; }
 
-
+        ++it;
 
     }
-
 }
 
 bool tact::exitRange(double & time)
@@ -321,5 +506,20 @@ bool tact::exitRange(double & time)
     if(sizeTact < time){ time -= sizeTact; return true;}
     return false;
 }
+
+#include <iostream>
+
+void tact::render(std::string &ss)
+{
+    duration::initDurtion(sizeTact, minTime);
+
+    for(auto & note : _notes )
+    {
+        note->render(ss);
+    }
+    ss.append( " | ");
+}
+
+
 
 

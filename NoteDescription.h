@@ -3,14 +3,22 @@
 
 #include <list>
 #include <memory>
+#include <string>
+
+#define LENGTHTONEXTDUR 1.3
 
 class symbol {
 public:
     typedef std::shared_ptr<symbol> SPtr;
     virtual ~symbol() = 0;
-    virtual void render() = 0;
-    virtual double getDuration() = 0;
-    virtual double setDuration(double _dur) = 0;
+    virtual void render(std::string & ss) = 0;
+    virtual double getDuration() const  = 0;
+    virtual void setDuration(double _dur) = 0;
+
+    virtual ushort getIndex() const = 0;
+
+    friend bool operator==(SPtr lhs, SPtr rhs);
+    friend bool operator!=(SPtr lhs, SPtr rhs);
 
 };
 
@@ -48,9 +56,11 @@ public:
     pause();
     pause(double dur);
     virtual ~pause();
-    virtual void render();
+    virtual void render(std::string & ss);
     virtual double getDuration() const;
-    virtual double setDuration(double _dur);
+    virtual void setDuration(double _dur);
+
+    virtual ushort getIndex() const;
 
     friend bool operator==(const pause & lhs, const pause & rhs);
     friend bool operator!=(const pause &lhs, const pause &rhs);
@@ -67,13 +77,21 @@ public:
     note();
     note(ushort ind, double dur);
     virtual ~note();
-    virtual void render();
+    virtual void render(std::string & ss);
     virtual double getDuration() const;
-    virtual double setDuration(double _dur);
+    virtual void setDuration(double _dur);
+
+    void setLeag(ushort i);
+
+    virtual ushort getIndex() const;
 
     friend bool operator==(const note & lhs, const note & rhs);
     friend bool operator!=(const note &lhs, const note &rhs);
 private:
+
+    bool inTonal();
+    char * nameEncode();
+
     double _duration;
     ushort _index;
     sign_alter _sign_alter;
@@ -88,7 +106,7 @@ class block_note {
 public:
     block_note();
     ~block_note();
-    void render();
+    void render(std::string &ss);
 
     void addNote(symbol::SPtr note);
     void merge(std::shared_ptr<block_note> el);
@@ -96,6 +114,8 @@ public:
     void durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr<block_note> next);
 
     ushort noteExits(std::shared_ptr<block_note> block);
+
+    bool empthy();
 
 
     friend bool operator==(const block_note & lhs, const block_note & rhs);
@@ -119,6 +139,8 @@ public:
     void reorgTact();
 
     bool exitRange(double & time);
+
+    void render(std::string &ss);
 
 private:
     std::list< std::shared_ptr<block_note> > _notes;

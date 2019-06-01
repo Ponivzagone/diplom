@@ -141,12 +141,22 @@ void AudioInput::startRecord()
     this->start();
 }
 
+#include <fstream>
+
+
 void AudioInput::startAlgo()
 {
     algo.reset(new AlgorithManager(winSize, hopSize, sampleRate));
     if(sampleBuffer)
     {
-        algo->algLoop(*sampleBuffer);
+
+        std::fstream ff;
+        ff.open("/srv/dev/jopa.ly", std::fstream::in | std::fstream::out |std::fstream::trunc);
+        ff << algo->algLoop(*sampleBuffer);
+        ff.close();
+
+        system("lilypond /srv/dev/jopa.ly");
+
         delete sampleBuffer;
         sampleBuffer = nullptr;
     }

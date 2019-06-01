@@ -23,7 +23,7 @@ void NoteListBuilder::buildPage(float _tempo)
     double beatInSec = tempo / 60.0;
     double secInBeat = 60.0 / tempo;
 
-    page.push_back(tact(secInBeat));
+    page.push_back(tact(secInBeat, offset));
 
 
     for(auto & block : indexNote)
@@ -37,7 +37,7 @@ void NoteListBuilder::buildPage(float _tempo)
         {
             symbol::SPtr n;
             if(noteIndex != 0) {
-                n = std::make_shared<note>(note( offset, noteIndex ));
+                n = std::make_shared<note>(note( noteIndex, offset ));
             } else {
                 n = std::make_shared<pause>(pause( offset ));
             }
@@ -51,10 +51,11 @@ void NoteListBuilder::buildPage(float _tempo)
 
         if(lastTact.exitRange(timer)) {
             page.back().reorgTact();
-            page.push_back(tact(secInBeat));
+            page.push_back(tact(secInBeat, offset));
         }
 
     }
+    page.back().reorgTact();
 }
 
 #include <iostream>
@@ -67,7 +68,7 @@ void NoteListBuilder::selectionNotes(std::vector<double> & probability)
     for(auto& note : probability)
     {
         ++index;
-        if(note > 0.8)
+        if(note > NOTEPROBABILITY)
         {
             blockNote.push_back(index);
         }
@@ -79,14 +80,12 @@ void NoteListBuilder::selectionNotes(std::vector<double> & probability)
     }
 }
 
-void NoteListBuilder::render()
+void NoteListBuilder::render(std::string & ss)
 {
-
-}
-
-bool NoteListBuilder::inTonal(uint index)
-{
-    static uint tonMask[] = {4,6,8,9,11,1,3}; // C_Major
-    if(std::binary_search(tonMask, tonMask + 7, index % 12)) return true;
-    return false;
+    ss.append("\\relative c'{ ");
+    for(auto & tact : page)
+    {
+        tact.render(ss);
+    }
+    ss.append(" }");
 }

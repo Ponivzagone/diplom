@@ -27,7 +27,8 @@ AlgorithManager::~AlgorithManager()
 
 }
 
-void AlgorithManager::algLoop(std::list<std::shared_ptr<Sample> > & sampleBuffer)
+#include <iostream>
+std::string AlgorithManager::algLoop(std::list<std::shared_ptr<Sample> > & sampleBuffer)
 {
 
     std::vector<float>  tempoRanged;
@@ -53,7 +54,9 @@ void AlgorithManager::algLoop(std::list<std::shared_ptr<Sample> > & sampleBuffer
     std::cout << "The median tempo is " << tempoRanged[tempoRanged.size()/2] << '\n';
 
     pageBuilder->buildPage( tempoRanged.at( tempoRanged.size() / 2 ) );
-    pageBuilder->render();
+    std::string ss;
+    pageBuilder->render(ss);
+    return ss;
 }
 
 int AlgorithManager::algStep(std::shared_ptr<Sample> & sample)

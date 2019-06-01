@@ -25,7 +25,7 @@ public:
     AlgorithManager(uint _winSize, uint _hopSize, uint _sampleRate);
     ~AlgorithManager();
 
-    void algLoop( std::list< std::shared_ptr< Sample > > & sampleBuffer );
+    std::string algLoop( std::list< std::shared_ptr< Sample > > & sampleBuffer );
 
     int algStep( std::shared_ptr< Sample > & sample );
 

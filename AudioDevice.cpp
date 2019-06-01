@@ -96,9 +96,9 @@ void AubioDevice::run()
     std::shared_ptr<float> tmp(new float[audioInput->hopSize], [](float * p){
         delete [] p;
     });
-    int i = 1;
+
     do {
-        std::cout << "r" << i++ << " " << std::endl;
+
         aubio_source_do(audioInput->source, in, &read);
         std::memcpy(tmp.get(), in->data, in->length * sizeof(float));
 

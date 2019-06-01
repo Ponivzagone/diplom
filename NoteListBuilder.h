@@ -3,6 +3,9 @@
 #include <list>
 #include <vector>
 #include "NoteDescription.h"
+#include <sstream>
+
+#define NOTEPROBABILITY 0.7
 
 
 class NoteListBuilder
@@ -15,11 +18,10 @@ public:
     void buildPage(float _tempo);
     void selectionNotes(std::vector<double> & probability);
 
-    void render();
+    void render(std::string &ss);
 
 private:
 
-    bool inTonal(uint index);
 
     std::list<tact> page;
     std::vector<std::vector<ushort> > indexNote;
