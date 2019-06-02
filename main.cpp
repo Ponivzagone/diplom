@@ -21,7 +21,7 @@ int main(int argc, char * argv[]) {
     ConfigReader::instance().setValue<uint>(CoreSettings::frame_size, 1024);
     ConfigReader::instance().setValue<uint>(CoreSettings::bit_rate, 16);
     ConfigReader::instance().setValue<uint>(CoreSettings::sample_rate, 0);
-    ConfigReader::instance().setValue<QString>(CoreSettings::source_path, "/srv/download/gamma1.wav");
+    ConfigReader::instance().setValue<QString>(CoreSettings::source_path, "/srv/download/Test1.wav");
 
 
     QCoreApplication app(argc, argv);

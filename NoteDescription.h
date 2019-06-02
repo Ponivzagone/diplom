@@ -10,6 +10,8 @@
 class symbol {
 public:
     typedef std::shared_ptr<symbol> SPtr;
+
+
     virtual ~symbol() = 0;
     virtual void render(std::string & ss) = 0;
     virtual double getDuration() const  = 0;
@@ -20,6 +22,8 @@ public:
     friend bool operator==(SPtr lhs, SPtr rhs);
     friend bool operator!=(SPtr lhs, SPtr rhs);
 
+    friend bool operator<(SPtr lhs, SPtr rhs);
+
 };
 
 
@@ -28,7 +32,7 @@ class duration {
      duration();
     ~duration();
 
-     static std::pair<int, double> dur[7];
+     static std::pair<int, double> dur[6];
 public:
 
     static std::pair<int, double> roundToNear(double time);
@@ -55,6 +59,7 @@ class pause : public symbol {
 public:
     pause();
     pause(double dur);
+
     virtual ~pause();
     virtual void render(std::string & ss);
     virtual double getDuration() const;
@@ -76,6 +81,7 @@ class note : public symbol {
 public:
     note();
     note(ushort ind, double dur);
+
     virtual ~note();
     virtual void render(std::string & ss);
     virtual double getDuration() const;

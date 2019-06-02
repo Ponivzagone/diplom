@@ -28,8 +28,15 @@ void NoteListBuilder::buildPage(float _tempo)
 
     for(auto & block : indexNote)
     {
-        auto & lastTact = page.back();
 
+        timer += offset;
+
+        if(page.back().exitRange(timer)) {
+            page.back().reorgTact();
+            page.push_back(tact(secInBeat, offset));
+        }
+
+        auto & lastTact = page.back();
 
         block_note blockNote;
 
@@ -46,13 +53,6 @@ void NoteListBuilder::buildPage(float _tempo)
         }
 
         lastTact.setSymbol(std::make_shared<block_note>(blockNote));
-
-        timer += offset;
-
-        if(lastTact.exitRange(timer)) {
-            page.back().reorgTact();
-            page.push_back(tact(secInBeat, offset));
-        }
 
     }
     page.back().reorgTact();
@@ -82,7 +82,7 @@ void NoteListBuilder::selectionNotes(std::vector<double> & probability)
 
 void NoteListBuilder::render(std::string & ss)
 {
-    ss.append("\\relative c'{ ");
+    ss.append("{ ");
     for(auto & tact : page)
     {
         tact.render(ss);

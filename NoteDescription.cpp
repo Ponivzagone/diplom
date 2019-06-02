@@ -29,6 +29,12 @@ bool operator!=(symbol::SPtr lhs, symbol::SPtr rhs)
     return true;
 }
 
+bool operator<(symbol::SPtr lhs, symbol::SPtr rhs)
+{
+    if(lhs->getIndex() < rhs->getIndex()) { return true; }
+    return false;
+}
+
 
 
 
@@ -58,7 +64,7 @@ duration::~duration()
 std::pair<int, double> duration::roundToNear(double time)
 {
     if(time < dur[0].second) return dur[0];
-    for(int i = 0; i < 6; ++i)
+    for(int i = 0; i < 4; ++i)
     {
         if(  std::abs(time - dur[i].second)
              <
@@ -67,15 +73,14 @@ std::pair<int, double> duration::roundToNear(double time)
             return dur[i];
         }
     }
-    return dur[6];
+    return dur[4];
 }
 
 void duration::initDurtion(double tactSize, double minTime)
 {
     int k = 0;
     dur[k++] = std::make_pair(0, minTime);
-    dur[k++] = std::make_pair(32, tactSize / 32);
-    dur[k++] = std::make_pair(16, tactSize / 16);
+    //dur[k++] = std::make_pair(16, tactSize / 16);
     dur[k++] = std::make_pair(8, tactSize / 8);
     dur[k++] = std::make_pair(4, tactSize / 4);
     dur[k++] = std::make_pair(2, tactSize / 2);
@@ -85,7 +90,7 @@ void duration::initDurtion(double tactSize, double minTime)
 std::string duration::render(double time)
 {
     std::stringstream ss;
-    for(int i = 0; i < 7; ++i)
+    for(int i = 0; i < 6; ++i)
     {
         if( equals( time, dur[i].second ) )
         {
@@ -167,7 +172,11 @@ note::~note() {
 void note::render(std::string & ss)
 {
     ss.append(this->nameEncode());
-    if(_index > 52)
+    if(_index > 39)
+    {
+        ss.append( "'");
+    }
+    if(_index > 51)
     {
         ss.append( "'");
     }
@@ -231,6 +240,7 @@ char * note::nameEncode()
             a = "g";
         break;
     }
+
     return a;
 }
 
@@ -282,10 +292,12 @@ block_note::~block_note() {
 
 void block_note::render(std::string &ss)
 {
+    //ss.append("<");
     for(auto & sym: _notes)
     {
         sym->render(ss);
     }
+   // ss.append(">");
 }
 
 void block_note::addNote(symbol::SPtr note)
@@ -293,23 +305,31 @@ void block_note::addNote(symbol::SPtr note)
     _notes.push_back(note);
 }
 
+#include <iostream>
+
 void block_note::merge(std::shared_ptr<block_note> el)
 {
     auto it = _notes.begin();
     std::list<symbol::SPtr> & elL = el.get()->_notes;
     for(auto itE = elL.begin(); itE != elL.end(); ++itE)
     {
+        //std::cout << "NEXT IND:" << it->get()->getIndex() << " DUR:" << it->get()->getDuration() << std::endl;
+        //std::cout << "MERGE IND:" << itE->get()->getIndex() << " DUR:" << itE->get()->getDuration() << std::endl;
+
         it->get()->setDuration(it->get()->getDuration() + itE->get()->getDuration());
+        it = std::next(it, 1);
+       // std::cout << " END MERGE!" << std::endl;
     }
     return;
 }
+
+#include <iterator>
+#include <map>
 
 void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr<block_note> next)
 {
     auto itE = _notes.end();
 
-    //auto & PB = prev->_notes;
-    //auto & NB = next->_notes;
 
     for(auto it = _notes.begin(); it != itE; )
     {
@@ -328,7 +348,8 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
                     }
                     it->get()->setDuration(0.0);
                 }
-                else
+
+                if(next)
                 {
                     auto & NB = next->_notes;
                     for(auto itS : NB)
@@ -341,35 +362,65 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
                 it = _notes.erase(it);
                 continue;
             }
-            else //ты огрызок ноты тебя надо засунуть вперед к такой же ноте либо спереди либо сзади
+            else //ты огрызок ноты тебя надо засунуть к такой же ноте либо спереди либо сзади
             {
+
+                // когда на вход блоки и справа и слева передаются надо отделюную ветку прописать
+                // найти для предыдущего то чего  не хватает  а если там больше ?? помоему все идет по пизде
+                // как откусить от срединного блока по половине в каждую сторону  при условии что есть хоть по одной ноте  не обзательно одинаковой что были с обоих сторон повторяющимися
+                // если нету то отдай все в предыдущее
+
+                std::map<int, symbol::SPtr> indLost;
+                bool check = false;
                 if(prev)
                 {
                     auto & PB = prev->_notes;
-                    for(auto itS : PB)
+                    for(auto gav : _notes)
                     {
-                        if(*it == itS)
+                        auto iii = std::find(PB.begin(), PB.end(), gav);
+                        if(iii == PB.end())
                         {
-                            itS->setDuration(itS->getDuration() + it->get()->getDuration());
+                            indLost[gav->getIndex()] = gav;
+                        }
+                    }
+                } else {
+                    auto & NB = next->_notes;
+                    for(auto itS : NB)
+                    {
+                        if(*it == itS )
+                        {
+                            double jopa = it->get()->getDuration();
+                            itS.get()->setDuration(itS.get()->getDuration() + jopa);
                             it->get()->setDuration(0.0);
                         }
                     }
                     it = _notes.erase(it);
                     continue;
                 }
-                else
+
+                if(next)
                 {
                     auto & NB = next->_notes;
-                    for(auto itS : NB)
+                    for(auto gav : _notes)
                     {
-                        if(*it == itS)
+                        auto iii = std::find(NB.begin(), NB.end(), gav);
+                        if(iii != NB.end() && indLost.find(iii->get()->getIndex()) != indLost.end())
                         {
-                            itS->setDuration(itS->getDuration() + it->get()->getDuration());
-                            it->get()->setDuration(0.0);
+                            check = true;
                         }
                     }
-                    it = _notes.erase(it);
-                    continue;
+                }
+
+                for(auto & iM: indLost)
+                {
+                    double jopa = it->get()->getDuration();
+                    if(check)
+                    {
+                        jopa = jopa / _notes.size();
+                    }
+
+                    iM.second->setDuration(iM.second->getDuration() + jopa);
+                    it->get()->setDuration(0.0);
                 }
             }
         }
@@ -408,6 +459,15 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
 //            }
         }
         ++it;
+    }
+    for (auto it = _notes.begin(); it != _notes.end();) {
+        if(it->get()->getDuration() == 0.0)
+        {
+            it  = _notes.erase(it);
+        }
+        else {
+            ++it;
+        }
     }
 }
 
@@ -459,11 +519,15 @@ void tact::setSymbol(std::shared_ptr<block_note> sym)
     _notes.push_back(sym);
 }
 
+#include <iostream>
+
 void tact::reorgTact()
 {
     if(_notes.empty()) { return; }
 
     duration::initDurtion(sizeTact, minTime);
+
+   // std::cout << "SIZE:" << _notes.size() << std::endl;
 
     auto end = _notes.end();
     for(auto it = _notes.begin(); it != end;)
@@ -472,13 +536,13 @@ void tact::reorgTact()
         if(itN == end) { break; }
 
         if(*(it->get()) == *(itN->get()))
-        {
+        {   
             itN->get()->merge(*it);
             it = _notes.erase(it);
         } else {
             ++it;
         }
-
+     //   std::cout << "SIZE:" << _notes.size() << std::endl;
     }
 
     for(auto it = _notes.begin(); it != end; )
@@ -487,15 +551,24 @@ void tact::reorgTact()
         auto itN = std::next(it, 1);
         auto itP = std::prev(it, 1);
 
-        if(itP == end && itN != end) { it->get()->durationAlive(nullptr, *itN); ++it; continue; }
-        if(itN == end && itP != end) { it->get()->durationAlive(*itP, nullptr); ++it; continue; }
+        if(itP == end && itN != end)
+        {
+            it->get()->durationAlive(nullptr, *itN);
+            if(it->get()->empthy()) { it = _notes.erase(it); continue; }
+            ++it; continue;
+        }
+        if(itN == end && itP != end)
+        {
+            it->get()->durationAlive(*itP, nullptr);
+            if(it->get()->empthy()) { it = _notes.erase(it); continue; }
+            ++it; continue;
+        }
 
         if(itP == end && itN == end) { break; }
 
         it->get()->durationAlive(*itP, *itN);
 
         if(it->get()->empthy()) { it = _notes.erase(it); continue; }
-
         ++it;
 
     }
@@ -503,7 +576,11 @@ void tact::reorgTact()
 
 bool tact::exitRange(double & time)
 {
-    if(sizeTact < time){ time -= sizeTact; return true;}
+    if(sizeTact < time)
+    {
+        time -= sizeTact;
+        return true;
+    }
     return false;
 }
 
@@ -519,7 +596,5 @@ void tact::render(std::string &ss)
     }
     ss.append( " | ");
 }
-
-
 
 
