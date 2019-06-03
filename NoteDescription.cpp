@@ -36,6 +36,14 @@ bool operator<(symbol::SPtr lhs, symbol::SPtr rhs)
 }
 
 
+bool comp(symbol::SPtr lhs, symbol::SPtr rhs)
+{
+    if(lhs->getIndex() < rhs->getIndex()) { return true; }
+    return false;
+}
+
+
+
 
 
 
@@ -326,140 +334,205 @@ void block_note::merge(std::shared_ptr<block_note> el)
 #include <iterator>
 #include <map>
 
+
 void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr<block_note> next)
 {
     auto itE = _notes.end();
 
 
-    for(auto it = _notes.begin(); it != itE; )
+    // Отвратный алгоритммм
+    if(prev && next)
     {
-        if( !(duration::roundToNear(it->get()->getDuration()).first) )
+        for(auto it = _notes.begin(); it != itE; )
         {
-            //если ты огрызок то тебя надо к чему то присунуть назад желательно если нету них то вперед его время пихать
-
-            if(!it->get()->getIndex()) //ты огрызок паузы тебя надо засунуть во все что спереди или сзади // одно типный код ван лавв (придурок)
+            if( !(duration::roundToNear(it->get()->getDuration()).first) )
             {
-                if(prev)
+
+                if(!it->get()->getIndex()) //ты огрызок паузы тебя надо засунуть во все что спереди или сзади // одно типный код ван лавв (придурок)
                 {
+
+                    double dur = it->get()->getDuration() / 2;
+                    it->get()->setDuration(0.0);
                     auto & PB = prev->_notes;
                     for(auto itS : PB)
                     {
-                        itS->setDuration(itS->getDuration() + it->get()->getDuration());
+                        itS->setDuration(itS->getDuration() + dur );
                     }
-                    it->get()->setDuration(0.0);
-                }
 
-                if(next)
-                {
+
                     auto & NB = next->_notes;
                     for(auto itS : NB)
                     {
-                        itS->setDuration(itS->getDuration() + it->get()->getDuration());
+                        itS->setDuration(itS->getDuration() + dur );
 
-                    }
-                    it->get()->setDuration(0.0);
-                }
-                it = _notes.erase(it);
-                continue;
-            }
-            else //ты огрызок ноты тебя надо засунуть к такой же ноте либо спереди либо сзади
-            {
-
-                // когда на вход блоки и справа и слева передаются надо отделюную ветку прописать
-                // найти для предыдущего то чего  не хватает  а если там больше ?? помоему все идет по пизде
-                // как откусить от срединного блока по половине в каждую сторону  при условии что есть хоть по одной ноте  не обзательно одинаковой что были с обоих сторон повторяющимися
-                // если нету то отдай все в предыдущее
-
-                std::map<int, symbol::SPtr> indLost;
-                bool check = false;
-                if(prev)
-                {
-                    auto & PB = prev->_notes;
-                    for(auto gav : _notes)
-                    {
-                        auto iii = std::find(PB.begin(), PB.end(), gav);
-                        if(iii == PB.end())
-                        {
-                            indLost[gav->getIndex()] = gav;
-                        }
-                    }
-                } else {
-                    auto & NB = next->_notes;
-                    for(auto itS : NB)
-                    {
-                        if(*it == itS )
-                        {
-                            double jopa = it->get()->getDuration();
-                            itS.get()->setDuration(itS.get()->getDuration() + jopa);
-                            it->get()->setDuration(0.0);
-                        }
                     }
                     it = _notes.erase(it);
                     continue;
                 }
+            }
+            ++it;
+        }
 
-                if(next)
+
+
+        std::multimap<int, symbol::SPtr > notFind;
+        short check = 0;
+        for (auto it = _notes.begin(); it != itE;it++)
+        {
+            if( !(duration::roundToNear(it->get()->getDuration()).first) )
+            {
                 {
-                    auto & NB = next->_notes;
-                    for(auto gav : _notes)
-                    {
-                        auto iii = std::find(NB.begin(), NB.end(), gav);
-                        if(iii != NB.end() && indLost.find(iii->get()->getIndex()) != indLost.end())
-                        {
-                            check = true;
-                        }
-                    }
+                    auto & PB = prev->_notes;
+                    auto f = std::find(PB.begin(), PB.end(), *it);
+                    if(f != PB.end()) { notFind.insert(std::pair<int, symbol::SPtr>(f->get()->getIndex(),*f)); check |= 1; }
                 }
 
-                for(auto & iM: indLost)
                 {
-                    double jopa = it->get()->getDuration();
-                    if(check)
-                    {
-                        jopa = jopa / _notes.size();
-                    }
-
-                    iM.second->setDuration(iM.second->getDuration() + jopa);
-                    it->get()->setDuration(0.0);
+                    auto & NB = next->_notes;
+                    auto f = std::find(NB.begin(), NB.end(), *it);
+                    if(f != NB.end()) {notFind.insert(std::pair<int, symbol::SPtr>(f->get()->getIndex(),*f)); check |= 2; }
                 }
             }
         }
-        else // ты не огрызок ты личностьтебя надо либо залиговать с нужной нотой либо кайфую ты пауза
-             // Хотяя хмм а если ты одиночная нота пока оставлю на подумать  тут надо с силой удара разбираться типа
-             // был ли всплеск либо нет(! надо спектр хранить нужной ноты в этот момент времени и смотреть на предыдущий
-             // снимок амплитуда упала значит падаем либо где завести поле амплитуда растет или нет если нет то смело лигуем а растет значит оставляем
-             // об этом чуть позжа
+
+        if(check & 1 && check & 2)
         {
-//            if(it->get()->getIndex())
-//            {
-//                if(prev)
-//                {
-//                    auto & PB = prev->_notes;
-//                    for(auto itS : PB)
-//                    {
-//                        if(*it == itS)
-//                        {
-//                            note * nn =  dynamic_cast<note *>(itS.get());
-//                            nn->setLeag(1);
-//                        }
-//                    }
+            for (auto it = _notes.begin(); it != itE;it++)
+            {
 
-//                }
-//                else
-//                {
-//                    auto & NB = next->_notes;
-//                    for(auto itS : NB)
-//                    {
-//                        if(*it == itS)
-//                        {
+                auto f = notFind.equal_range(it->get()->getIndex());
+                for (auto i = f.first; i != f.second; ++i)
+                {
+                    double dur = it->get()->getDuration() / 2;
+                    i->second.get()->setDuration(i->second.get()->getDuration() + dur );
+                }
+                it->get()->setDuration(0.0);
+            }
+        } else if(check & 1 || check & 2)
+        {
+            for (auto it = _notes.begin(); it != itE;it++)
+            {
 
-//                        }
-//                    }
-//                }
-//            }
+                auto f = notFind.equal_range(it->get()->getIndex());
+                for (auto i = f.first; i != f.second; ++i)
+                {
+                    double dur = it->get()->getDuration();
+                    i->second.get()->setDuration(i->second.get()->getDuration() + dur );
+                }
+                it->get()->setDuration(0.0);
+            }
         }
-        ++it;
+
     }
+    else {
+        for(auto it = _notes.begin(); it != itE; )
+        {
+            if( !(duration::roundToNear(it->get()->getDuration()).first) )
+            {
+                //если ты огрызок то тебя надо к чему то присунуть назад желательно если нету них то вперед его время пихать
+
+                if(!it->get()->getIndex()) //ты огрызок паузы тебя надо засунуть во все что спереди или сзади // одно типный код ван лавв (придурок)
+                {
+                    if(prev)
+                    {
+                        auto & PB = prev->_notes;
+                        for(auto itS : PB)
+                        {
+                            itS->setDuration(itS->getDuration() + it->get()->getDuration());
+                        }
+                        it->get()->setDuration(0.0);
+                    }
+                    else
+                    {
+                        auto & NB = next->_notes;
+                        for(auto itS : NB)
+                        {
+                            itS->setDuration(itS->getDuration() + it->get()->getDuration());
+
+                        }
+                        it->get()->setDuration(0.0);
+                    }
+                    it = _notes.erase(it);
+                    continue;
+                }
+                else //ты огрызок ноты тебя надо засунуть к такой же ноте либо спереди либо сзади
+                {
+
+                    // когда на вход блоки и справа и слева передаются надо отделюную ветку прописать
+                    // найти для предыдущего то чего  не хватает  а если там больше ?? помоему все идет по пизде
+                    // как откусить от срединного блока по половине в каждую сторону  при условии что есть хоть по одной ноте  не обзательно одинаковой что были с обоих сторон повторяющимися
+                    // если нету то отдай все в предыдущее
+
+                    if(prev)
+                    {
+                        auto & NB = prev->_notes;
+                        for(auto itS : NB)
+                        {
+                            if(*it == itS )
+                            {
+                                itS.get()->setDuration(itS.get()->getDuration() +  it->get()->getDuration());
+                                it->get()->setDuration(0.0);
+                            }
+                        }
+                        it = _notes.erase(it);
+                        continue;
+                    }
+                    else
+                    {
+                        auto & NB = next->_notes;
+                        for(auto itS : NB)
+                        {
+                            if(*it == itS )
+                            {
+                                itS.get()->setDuration(itS.get()->getDuration() + it->get()->getDuration());
+                                it->get()->setDuration(0.0);
+                            }
+                        }
+                        it = _notes.erase(it);
+                        continue;
+                    }
+
+                }
+            }
+            else // ты не огрызок ты личностьтебя надо либо залиговать с нужной нотой либо кайфую ты пауза
+                 // Хотяя хмм а если ты одиночная нота пока оставлю на подумать  тут надо с силой удара разбираться типа
+                 // был ли всплеск либо нет(! надо спектр хранить нужной ноты в этот момент времени и смотреть на предыдущий
+                 // снимок амплитуда упала значит падаем либо где завести поле амплитуда растет или нет если нет то смело лигуем а растет значит оставляем
+                 // об этом чуть позжа
+            {
+    //            if(it->get()->getIndex())
+    //            {
+    //                if(prev)
+    //                {
+    //                    auto & PB = prev->_notes;
+    //                    for(auto itS : PB)
+    //                    {
+    //                        if(*it == itS)
+    //                        {
+    //                            note * nn =  dynamic_cast<note *>(itS.get());
+    //                            nn->setLeag(1);
+    //                        }
+    //                    }
+
+    //                }
+    //                else
+    //                {
+    //                    auto & NB = next->_notes;
+    //                    for(auto itS : NB)
+    //                    {
+    //                        if(*it == itS)
+    //                        {
+
+    //                        }
+    //                    }
+    //                }
+    //            }
+            }
+            ++it;
+        }
+    }
+
+
     for (auto it = _notes.begin(); it != _notes.end();) {
         if(it->get()->getDuration() == 0.0)
         {

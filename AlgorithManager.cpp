@@ -15,7 +15,7 @@ AlgorithManager::AlgorithManager(uint_t _winSize, uint_t _hopSize, uint_t _sampl
                             _sampleRate
                           ));
 
-    trainingSet trainingData("/srv/Diplom/app/courseWork/dataSetNet/empty.txt");
+    trainingSet trainingData("/srv/dev/diplom/dataSetNet/empty.txt");
     std::vector<unsigned> topology;
     trainingData.getTopology(topology);
     net.reset(new Net(topology));
@@ -77,7 +77,7 @@ int AlgorithManager::algStep(std::shared_ptr<Sample> & sample)
         max = std::max(max, input.back());
     }
 
-    if(max < 6.0) { return 1; }
+    if(max < 5.0) { return 1; }
 
     unsigned lenght = input.size();
     for(unsigned i = 0; i < lenght; ++i)
