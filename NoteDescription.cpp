@@ -124,13 +124,15 @@ pause::~pause() {
 
 }
 
-void pause::render(std::string & ss)
+double pause::render(std::string & ss)
 {
+    if(!duration::roundToNear(_duration).first)
+    {
+        return 0.0;
+    }
+
     ss.append( "r");
-    std::stringstream s;
-    s << duration::roundToNear(_duration).first;
-    ss.append( s.str());
-    ss.append( " ");
+    return duration::roundToNear(_duration).first;
 }
 
 double pause::getDuration() const
@@ -177,8 +179,12 @@ note::~note() {
 
 }
 
-void note::render(std::string & ss)
+double note::render(std::string & ss)
 {
+    if(!duration::roundToNear(_duration).first)
+    {
+        return 0.0;
+    }
     ss.append(this->nameEncode());
     if(_index > 39)
     {
@@ -192,10 +198,8 @@ void note::render(std::string & ss)
     {
         ss.append("es");
     }
-    std::stringstream s;
-    s << duration::roundToNear(_duration).first;
-    ss.append( s.str());
     ss.append(" ");
+    return duration::roundToNear(_duration).first;
 }
 
 bool note::inTonal()
@@ -300,12 +304,25 @@ block_note::~block_note() {
 
 void block_note::render(std::string &ss)
 {
-    //ss.append("<");
+    int dur = 0;
+    int first;
+    if(_notes.size() != 1)
+        ss.append("<");
     for(auto & sym: _notes)
     {
-        sym->render(ss);
+        first = duration::roundToNear(sym->getDuration()).first;
+        if(dur == 0) { dur = first; }
+        if(first != 0 && dur == first) { sym->render(ss); }
     }
-   // ss.append(">");
+    if(_notes.size() != 1)
+        ss.append(">");
+    if(dur != 0 )
+        {
+        std::stringstream s;
+        s << dur;
+        ss.append(s.str());
+        ss.append(" ");
+    }
 }
 
 void block_note::addNote(symbol::SPtr note)

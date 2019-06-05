@@ -13,7 +13,7 @@ public:
 
 
     virtual ~symbol() = 0;
-    virtual void render(std::string & ss) = 0;
+    virtual double render(std::string & ss) = 0;
     virtual double getDuration() const  = 0;
     virtual void setDuration(double _dur) = 0;
 
@@ -61,7 +61,7 @@ public:
     pause(double dur);
 
     virtual ~pause();
-    virtual void render(std::string & ss);
+    virtual double render(std::string & ss);
     virtual double getDuration() const;
     virtual void setDuration(double _dur);
 
@@ -83,7 +83,7 @@ public:
     note(ushort ind, double dur);
 
     virtual ~note();
-    virtual void render(std::string & ss);
+    virtual double render(std::string & ss);
     virtual double getDuration() const;
     virtual void setDuration(double _dur);
 

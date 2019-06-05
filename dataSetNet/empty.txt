@@ -1,1 +1,1 @@
-topology: 512 718 88
+topology: 512 88
