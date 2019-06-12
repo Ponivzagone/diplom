@@ -43,3 +43,8 @@ smpl_t * AubioFFT::getNorm() const {
 smpl_t * AubioFFT::getPhase() const {
     return fftGrain->phas;
 }
+
+uint_t AubioFFT::getSizeFFT() const
+{
+    return winSize;
+}

@@ -6,7 +6,7 @@
 #include <map>
 
 AlgorithManager::AlgorithManager(uint_t _winSize, uint_t _hopSize, uint_t _sampleRate)
-    : winSize(_winSize)
+    : winSize(_winSize), sampleRate(_sampleRate), hopSize(_hopSize)
 {
     spectrumeAnalyze.reset(new AubioFFT(winSize));
     beatTracker.reset(new AubioTempo(
@@ -19,7 +19,6 @@ AlgorithManager::AlgorithManager(uint_t _winSize, uint_t _hopSize, uint_t _sampl
     std::vector<unsigned> topology;
     trainingData.getTopology(topology);
     net.reset(new Net(topology));
-    pageBuilder.reset(new NoteListBuilder(_sampleRate, _winSize, _hopSize));
 }
 
 AlgorithManager::~AlgorithManager()
@@ -27,10 +26,11 @@ AlgorithManager::~AlgorithManager()
 
 }
 
-#include <iostream>
+
+
 std::string AlgorithManager::algLoop(std::list<std::shared_ptr<Sample> > & sampleBuffer)
 {
-
+    QScopedPointer<NoteListBuilder> pageBuilder(new NoteListBuilder(sampleRate, winSize, hopSize));
     std::vector<float>  tempoRanged;
     std::vector<double> results;
     results.reserve(88);
@@ -45,7 +45,8 @@ std::string AlgorithManager::algLoop(std::list<std::shared_ptr<Sample> > & sampl
 
         results.clear();
         if(!code) { net->getResults(results); }
-        pageBuilder->selectionNotes(results);
+
+        pageBuilder->selectionNotes(results, spectrumeAnalyze.get());
 
 
     }

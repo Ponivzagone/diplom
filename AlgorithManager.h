@@ -16,8 +16,6 @@
 
 struct Sample;
 
-
-
 class AlgorithManager
 {
 public:
@@ -37,12 +35,13 @@ private:
 
 
     uint winSize;
+    uint sampleRate;
+    uint hopSize;
 
 
     QScopedPointer<AudioFFT> spectrumeAnalyze;
     QScopedPointer<TempoDetecting> beatTracker;
     QScopedPointer<Net> net;
-    QScopedPointer<NoteListBuilder> pageBuilder;
 
 
 

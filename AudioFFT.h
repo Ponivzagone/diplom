@@ -17,6 +17,7 @@ public:
 
     virtual smpl_t * getNorm()  const = 0;
     virtual smpl_t * getPhase() const = 0;
+    virtual uint_t getSizeFFT() const = 0;
 };
 
 class AubioFFT final : public AudioFFT {
@@ -31,6 +32,8 @@ public:
 
     smpl_t * getNorm()  const;
     smpl_t * getPhase() const;
+
+    uint_t getSizeFFT() const;
 
 private:
     uint_t        winSize;

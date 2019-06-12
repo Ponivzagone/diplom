@@ -169,8 +169,8 @@ note::note()
 
 }
 
-note::note(ushort ind, double dur)
-    : _duration(dur), _index(ind)
+note::note(ushort ind, double dur, StatusNote _stat)
+    : _duration(dur), _index(ind), stat(_stat)
 {
 
 }
@@ -511,39 +511,36 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
 
                 }
             }
-            else // ты не огрызок ты личностьтебя надо либо залиговать с нужной нотой либо кайфую ты пауза
-                 // Хотяя хмм а если ты одиночная нота пока оставлю на подумать  тут надо с силой удара разбираться типа
-                 // был ли всплеск либо нет(! надо спектр хранить нужной ноты в этот момент времени и смотреть на предыдущий
-                 // снимок амплитуда упала значит падаем либо где завести поле амплитуда растет или нет если нет то смело лигуем а растет значит оставляем
-                 // об этом чуть позжа
+            else if(it->get()->getStatus() == StatusNote::Sustain)
             {
-    //            if(it->get()->getIndex())
-    //            {
-    //                if(prev)
-    //                {
-    //                    auto & PB = prev->_notes;
-    //                    for(auto itS : PB)
-    //                    {
-    //                        if(*it == itS)
-    //                        {
-    //                            note * nn =  dynamic_cast<note *>(itS.get());
-    //                            nn->setLeag(1);
-    //                        }
-    //                    }
-
-    //                }
-    //                else
-    //                {
-    //                    auto & NB = next->_notes;
-    //                    for(auto itS : NB)
-    //                    {
-    //                        if(*it == itS)
-    //                        {
-
-    //                        }
-    //                    }
-    //                }
-    //            }
+                if(prev)
+                {
+                    auto & NB = prev->_notes;
+                    for(auto itS : NB)
+                    {
+                        if(*it == itS )
+                        {
+                            itS.get()->setDuration(itS.get()->getDuration() +  it->get()->getDuration());
+                            it->get()->setDuration(0.0);
+                        }
+                    }
+                    it = _notes.erase(it);
+                    continue;
+                }
+                else
+                {
+                    auto & NB = next->_notes;
+                    for(auto itS : NB)
+                    {
+                        if(*it == itS )
+                        {
+                            itS.get()->setDuration(itS.get()->getDuration() + it->get()->getDuration());
+                            it->get()->setDuration(0.0);
+                        }
+                    }
+                    it = _notes.erase(it);
+                    continue;
+                }
             }
             ++it;
         }
@@ -627,8 +624,8 @@ void tact::reorgTact()
 
         if(*(it->get()) == *(itN->get()))
         {   
-            itN->get()->merge(*it);
-            it = _notes.erase(it);
+            it->get()->merge(*itN);
+            _notes.erase(itN);
         } else {
             ++it;
         }

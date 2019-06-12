@@ -5,7 +5,14 @@
 #include <memory>
 #include <string>
 
+
 #define LENGTHTONEXTDUR 1.3
+
+enum StatusNote {
+    Attack = 1,
+    Sustain = 2,
+    Mute = 3
+};
 
 class symbol {
 public:
@@ -16,6 +23,8 @@ public:
     virtual double render(std::string & ss) = 0;
     virtual double getDuration() const  = 0;
     virtual void setDuration(double _dur) = 0;
+
+    virtual StatusNote getStatus() = 0;
 
     virtual ushort getIndex() const = 0;
 
@@ -64,6 +73,8 @@ public:
     virtual double render(std::string & ss);
     virtual double getDuration() const;
     virtual void setDuration(double _dur);
+    virtual StatusNote getStatus() { return StatusNote::Mute; }
+
 
     virtual ushort getIndex() const;
 
@@ -80,12 +91,14 @@ private:
 class note : public symbol {
 public:
     note();
-    note(ushort ind, double dur);
+    note(ushort ind, double dur, StatusNote _stat);
 
     virtual ~note();
     virtual double render(std::string & ss);
     virtual double getDuration() const;
     virtual void setDuration(double _dur);
+
+    virtual StatusNote getStatus() { return stat; }
 
     void setLeag(ushort i);
 
@@ -101,6 +114,8 @@ private:
     double _duration;
     ushort _index;
     sign_alter _sign_alter;
+
+    StatusNote stat;
 
     bool leag;
 };
