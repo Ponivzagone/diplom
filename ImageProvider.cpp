@@ -7,7 +7,7 @@ LiveImageProvider::LiveImageProvider() : QQuickImageProvider(QQuickImageProvider
 {
 
     QString filename;
-    filename = "/srv/dev/Diplom/source/programs/lilyPond.pdf";
+    filename = "/srv/dev/jopa.pdf";
     Poppler::Document* document = Poppler::Document::load(filename);
     if (!document || document->isLocked()) {
         // ... error message ....
@@ -39,7 +39,7 @@ LiveImageProvider::LiveImageProvider() : QQuickImageProvider(QQuickImageProvider
 
     }
 
-    image_.save("/srv/dev/Diplom/source/programs/1.png");
+    image_.save("/srv/dev/diplom/1.png");
     delete pdfPage;
 
     delete document;

@@ -1,5 +1,6 @@
-TEMPLATE = app
-QT += gui quick quickcontrols2 core
+
+QT += gui quick multimedia core quickcontrols2
+
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -16,6 +17,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        AlgorithManager.cpp \
+        AudioDevice.cpp \
         AudioFFT.cpp \
         AudioInput.cpp \
         AudioTempo.cpp \
@@ -25,6 +28,7 @@ SOURCES += \
         NeuroNet/recognition.cpp \
         NeuroNet/trainingSet.cpp \
         NoteDescription.cpp \
+        NoteListBuilder.cpp \
         main.cpp \
         settings/config_reader.cpp \
         settings/settings.cpp
@@ -38,6 +42,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    AlgorithManager.h \
+    AudioDevice.h \
     AudioFFT.h \
     AudioInput.h \
     AudioTempo.h \
@@ -48,6 +54,7 @@ HEADERS += \
     NeuroNet/trainingSet.h \
     settings/config_reader.h \
     settings/settings.h \
+    NoteListBuilder.h \
     NoteDescription.h
 
 RESOURCES += \

@@ -7,7 +7,9 @@ static QStringList key_strings
     "sample_rate",
     "frame_size",
     "bit_rate",
-    "fft_type"
+    "fft_type",
+    "tempo_type",
+    "source_path"
 };
 
 bool Settings::keyToString(CoreSettings key, QString& key_str)

@@ -11,7 +11,7 @@ Net::Net(const std::vector<unsigned> &topology)
 	unsigned numLayers = topology.size();
     std::vector<neuroW> readWeight;
 
-    trainingSet loadWeight("/srv/Diplom/app/courseWork/dataSetNet/InOutWeight.txt");
+    trainingSet loadWeight("/srv/dev/diplom/dataSetNet/weight.txt");
     for (unsigned layerNum = 0; layerNum < numLayers; ++layerNum)
     {
 		layers.push_back(Layer());
@@ -31,7 +31,6 @@ Net::Net(const std::vector<unsigned> &topology)
 
 void Net::getResults(std::vector<double> &resultVals) const
 {
-	resultVals.clear();
 
 	for (unsigned n = 0; n < layers.back().size() - 1; ++n)
 	{
@@ -102,7 +101,7 @@ void Net::getneuroWeight()
         }
     }
     std::ofstream fout;
-    fout.open("C:/Users/Sementos/Desktop/kursovaia/dataSetNet/InOutWeight.txt");
+    fout.open("/srv/dev/diplom/dataSetNet/weight.txt");
 
     for(unsigned i = 0; i < readWeight.size(); ++i)
     {

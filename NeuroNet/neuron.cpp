@@ -90,10 +90,10 @@ void Neuron::feedForward(const Layer &prevLayer)
 			prevLayer[n].outputWeights[m_myIndex].weight;
 	}
     sum = Neuron::activationFunction(sum);
-    if(sum == 1)
-        outputVal = 0.999;
-    if(sum  == -1)
-        outputVal = -0.999;
-    else
+//    if(sum == 1)
+//        outputVal = 0.999;
+//    if(sum  == -1)
+//        outputVal = -0.999;
+//    else
         outputVal = sum;
 }
