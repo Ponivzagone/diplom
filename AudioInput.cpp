@@ -57,11 +57,11 @@ AudioInput::AudioInput(QObject * parent)
     connect(this, &AudioInput::recFinished, this, &AudioInput::stopRecord);
     connect(&ConfigReader::instance(), &ConfigReader::configChanged, this, &AudioInput::configHandler);
 
-    winSize = ConfigReader::instance().getValue<uint>(CoreSettings::frame_size, 8192);
-    bitRate = ConfigReader::instance().getValue<uint>(CoreSettings::bit_rate, 16);
+    winSize = ConfigReader::instance().getValue<uint>(CoreSettings::frame_size);
+    bitRate = ConfigReader::instance().getValue<uint>(CoreSettings::bit_rate);
     hopSize = winSize / DIVIDER;
-    sampleRate = ConfigReader::instance().getValue<uint>(CoreSettings::sample_rate, 8000);
-    sourcePath = ConfigReader::instance().getValue<QString>(CoreSettings::source_path, "/srv/download/gamma.wav");
+    sampleRate = ConfigReader::instance().getValue<uint>(CoreSettings::sample_rate);
+    sourcePath = ConfigReader::instance().getValue<QString>(CoreSettings::source_path);
 }
 
 void AudioInput::checkAndCopySample(std::shared_ptr<Sample> block, std::shared_ptr<float> sample, unsigned int size)
@@ -144,6 +144,48 @@ void AudioInput::startRecord()
 #include <fstream>
 
 
+void AudioInput::Image()
+{
+    QString filename;
+    filename = "/srv/dev/build-AubioTempo-Desktop_Qt_5_12_3_GCC_64bit-Debug/jopa.pdf";
+    Poppler::Document* document = Poppler::Document::load(filename);
+    if (!document || document->isLocked()) {
+        // ... error message ....
+        delete document;
+
+    }
+
+    // Paranoid safety check
+    if (document == nullptr) {
+      // ... error message ...
+
+    }
+    // Access page of the PDF file
+    Poppler::Page* pdfPage = document->page(0);  // Document starts at page 0
+    if (pdfPage == nullptr) {
+      // ... error message ...
+
+    }
+
+
+     emit finishAlgo(pdfPage->renderToImage(100.0,100.0));
+    //this->blockSignals(false);
+
+
+    // Generate a QImage of the rendered page
+    QImage image_ = pdfPage->renderToImage(100.0,100.0);
+    if (image_.isNull()) {
+      // ... error message ...
+
+    }
+
+    image_.save("/srv/dev/diplom/1.png");
+    delete pdfPage;
+
+    delete document;
+}
+
+
 void AudioInput::startAlgo()
 {
     algo.reset(new AlgorithManager(winSize, hopSize, sampleRate));
@@ -159,8 +201,9 @@ void AudioInput::startAlgo()
 
         delete sampleBuffer;
         sampleBuffer = nullptr;
+
+        Image();
     }
-    emit finishAlgo();
 }
 
 void AudioInput::configHandler(uint key)
@@ -176,7 +219,9 @@ void AudioInput::configHandler(uint key)
         } else if (name == "bit_rate") {
             bitRate = ConfigReader::instance().getValue<uint>(CoreSettings::bit_rate);
         } else if (name == "source_path") {
-            sourcePath = ConfigReader::instance().getValue<QString>(CoreSettings::source_path);
+            QString str = ConfigReader::instance().getValue<QString>(CoreSettings::source_path);
+            str.remove("file://");
+            sourcePath = str;
         }
     }
 }
@@ -227,6 +272,7 @@ void QtReader::start()
     changeRecordStatus();
     audioInput->start(audioDevice.data());
 }
+
 
 void QtReader::stop()
 {

@@ -28,7 +28,7 @@ bool Settings::stringToKey(const QString &key_str, uint &key_id)
     int index = key_strings.indexOf(key_str);
     if(index != -1)
     {
-        key_id = static_cast<uint>(key_id);
+        key_id = static_cast<uint>(index);
         return true;
     }
     return false;

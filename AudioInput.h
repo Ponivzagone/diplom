@@ -12,6 +12,11 @@
 
 #include <cstring>
 
+#include <QImage>
+#include <poppler/qt5/poppler-qt5.h>
+
+#include "settings/config_reader.h"
+
 #include <iostream>
 #include "AlgorithManager.h"
 
@@ -59,7 +64,7 @@ struct Sample {
     quint32   fillSize;
     quint32   winSize;
 };
-
+#include <QUrl>
 
 class AudioInput : public QObject {
 
@@ -77,6 +82,12 @@ public:
 
     void setSamples(std::shared_ptr<float> samples, unsigned int sizeSample);
 
+    Q_INVOKABLE void setUrl(const QUrl &fileUrl)
+    {
+        ConfigReader::instance().setValue<QString>(CoreSettings::source_path, fileUrl.toString());
+    }
+
+
 protected:
 
     QScopedPointer<AlgorithManager> algo;
@@ -93,7 +104,11 @@ protected:
 
     bool isRecord();
     void changeRecordStatus();
-     int status;
+    void Image();
+
+    int status;
+
+
 
 private:
     void checkAndCopySample(std::shared_ptr<Sample> block,
@@ -101,14 +116,18 @@ private:
                                         unsigned int size);
 
 signals:
-    void finishAlgo();
+    void finishAlgo(const QImage &image);
     void recFinished();
 
-public slots:
+
+
+public Q_SLOTS:
     void stopRecord();
     void startRecord();
-    void startAlgo();
 
+
+public slots:
+    void startAlgo();
     void configHandler(uint key);
 };
 

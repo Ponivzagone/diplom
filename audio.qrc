@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>view/HomeForm.qml</file>
+        <file>view/main.qml</file>
+        <file>view/Page1Form.qml</file>
+        <file>view/Page2Form.qml</file>
+        <file>view/qtquickcontrols2.conf</file>
+        <file>fonts/fontello.ttf</file>
+        <file>view/ScrollablePage.qml</file>
+    </qresource>
+</RCC>

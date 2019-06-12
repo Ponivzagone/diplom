@@ -114,5 +114,7 @@ void AubioDevice::run()
     audioInput->done = true;
     audioInput->record_cond.wakeAll();
 
+    audioInput->changeRecordStatus();
+
     std::cout << "  norm stop  ";
 }

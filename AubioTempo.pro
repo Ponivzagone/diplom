@@ -1,7 +1,7 @@
 
-QT += gui quick multimedia core quickcontrols2
+QT += gui quick multimedia core quickcontrols2 widgets
 
-
+cross_compile: DEFINES += QT_EXTRA_FILE_SELECTOR=\\\"touch\\\"
 CONFIG += c++11 console
 CONFIG -= app_bundle
 
@@ -58,9 +58,6 @@ HEADERS += \
     NoteDescription.h
 
 RESOURCES += \
-    view/HomeForm.qml \
-    view/Page1Form.qml \
-    view/Page2Form.qml \
-    view/main.qml \
-    view/qtquickcontrols2.conf
+    audio.qrc
+
 
