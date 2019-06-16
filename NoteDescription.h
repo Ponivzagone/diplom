@@ -6,8 +6,6 @@
 #include <string>
 
 
-#define LENGTHTONEXTDUR 1.3
-
 enum StatusNote {
     Attack = 1,
     Sustain = 2,
@@ -25,6 +23,7 @@ public:
     virtual void setDuration(double _dur) = 0;
 
     virtual StatusNote getStatus() = 0;
+    virtual void setStatus(StatusNote _stat) = 0;
 
     virtual ushort getIndex() const = 0;
 
@@ -75,6 +74,7 @@ public:
     virtual void setDuration(double _dur);
     virtual StatusNote getStatus() { return StatusNote::Mute; }
 
+    virtual void setStatus(StatusNote _stat) {}
 
     virtual ushort getIndex() const;
 
@@ -99,6 +99,11 @@ public:
     virtual void setDuration(double _dur);
 
     virtual StatusNote getStatus() { return stat; }
+    virtual void setStatus(StatusNote _stat) {
+        if(_stat == StatusNote::Attack)
+        {stat = _stat;}
+    }
+
 
     void setLeag(ushort i);
 
@@ -137,6 +142,16 @@ public:
     ushort noteExits(std::shared_ptr<block_note> block);
 
     bool empthy();
+
+    bool checkStat()
+    {
+        bool j = false;
+        for(auto & n :_notes)
+        {
+            if(n.get()->getStatus() == StatusNote::Sustain) j = true;
+        }
+        return j;
+    }
 
 
     friend bool operator==(const block_note & lhs, const block_note & rhs);

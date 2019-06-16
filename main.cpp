@@ -79,6 +79,8 @@ int main(int argc, char * argv[]) {
     QObject::connect(&jopa, &AudioInput::finishAlgo, liveImageProvider, &LiveImageProvider::updateImage);
     //QTimer::singleShot(2000, &jopa, &AudioInput::startRecord);
 
+    jopa.Image();
+
 
     QSettings settings;
     QString style = QQuickStyle::name();

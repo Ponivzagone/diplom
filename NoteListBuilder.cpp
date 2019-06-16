@@ -12,7 +12,7 @@ NoteListBuilder::NoteListBuilder(uint _sampleRate, uint _winSize, uint _hopSize)
     noteHzInit();
     offset = static_cast<double>(hopSize) / static_cast<double>(sampleRate);
     stepSpectr = static_cast<double>(sampleRate) / static_cast<double>(winSize);
-
+    NoteProbability = ConfigReader::instance().getValue<double>(CoreSettings::note_prob, 0.7);
     noteChange = winSize / hopSize;
 
 }
@@ -112,7 +112,7 @@ void NoteListBuilder::selectionNotes(std::vector<double> & probability, AudioFFT
     for(auto& note : probability)
     {
         ++index;
-        if(note > NOTEPROBABILITY)
+        if(note > NoteProbability)
         {
 
             double hz = HzNote.at(index - 1);

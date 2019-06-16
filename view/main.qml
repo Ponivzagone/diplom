@@ -19,7 +19,7 @@ import Qt.labs.settings 1.0
 ApplicationWindow {
     id: window
     visible: true
-    width: 640
+    width: 320
     height: 480
     title: qsTr("Stack")
 

@@ -33,8 +33,8 @@ Page {
         smooth: true
         antialiasing: true
         Component.onCompleted: {
-            x = 0
-            y = 0
+            x = -200
+            y = -200
             rotation = 0
         }
         Image {

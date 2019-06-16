@@ -10,7 +10,9 @@ enum class CoreSettings : uint
     bit_rate = 2,
     fft_type = 3,
     tempo_type = 4,
-    source_path = 5
+    source_path = 5,
+    round_dur = 6,
+    note_prob = 7
 };
 
 namespace Settings

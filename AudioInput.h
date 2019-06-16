@@ -82,10 +82,22 @@ public:
 
     void setSamples(std::shared_ptr<float> samples, unsigned int sizeSample);
 
-    Q_INVOKABLE void setUrl(const QUrl &fileUrl)
+    Q_INVOKABLE void setUrl(const QUrl & fileUrl)
     {
         ConfigReader::instance().setValue<QString>(CoreSettings::source_path, fileUrl.toString());
     }
+
+    Q_INVOKABLE void setNextDur(const double & nextDur)
+    {
+        ConfigReader::instance().setValue<double>(CoreSettings::round_dur, nextDur);
+    }
+
+    Q_INVOKABLE void setNoteProb(const double & noteProb)
+    {
+        ConfigReader::instance().setValue<double>(CoreSettings::note_prob, noteProb);
+    }
+
+    void Image();
 
 
 protected:
@@ -104,7 +116,6 @@ protected:
 
     bool isRecord();
     void changeRecordStatus();
-    void Image();
 
     int status;
 

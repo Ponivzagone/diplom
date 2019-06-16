@@ -169,10 +169,7 @@ void AudioInput::Image()
 
 
      emit finishAlgo(pdfPage->renderToImage(100.0,100.0));
-    //this->blockSignals(false);
 
-
-    // Generate a QImage of the rendered page
     QImage image_ = pdfPage->renderToImage(100.0,100.0);
     if (image_.isNull()) {
       // ... error message ...
@@ -197,7 +194,7 @@ void AudioInput::startAlgo()
         ff << algo->algLoop(*sampleBuffer);
         ff.close();
 
-        system("lilypond /srv/dev/jopa.ly");
+        system("lilypond /srv/dev/jopa.ly --output=/srv/dev");
 
         delete sampleBuffer;
         sampleBuffer = nullptr;

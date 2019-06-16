@@ -69,7 +69,7 @@ private:
     std::vector<std::pair<ushort, double > > prevNote;
 
 
-
+    double NoteProbability;
 
     std::list<tact> page;
     std::vector<std::vector<std::pair<ushort, StatusNote > > > indexNote;

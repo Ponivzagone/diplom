@@ -19,7 +19,6 @@ symbol::~symbol() {
 bool operator==(symbol::SPtr lhs, symbol::SPtr rhs)
 {
     if(lhs->getIndex() != rhs->getIndex()) { return false; }
-    //if( !equals( lhs->getDuration(), rhs->getDuration() ) ) { return false; }
     return true;
 }
 
@@ -69,14 +68,26 @@ duration::~duration()
 
 }
 
+#include "settings/config_reader.h"
+
+static double LenghtToNrxtDur;
+
 std::pair<int, double> duration::roundToNear(double time)
 {
-    if(time < dur[0].second) return dur[0];
-    for(int i = 0; i < 4; ++i)
+
+
+    for (int i = 1; i < 2; ++i) {
+        if(time < dur[i].second)
+        {
+            return dur[i - 1];
+        }
+    }
+
+    for(int i = 2; i < 4; ++i)
     {
         if(  std::abs(time - dur[i].second)
              <
-           ( dur[i + 1].second - dur[i].second ) / LENGTHTONEXTDUR )
+           ( dur[i + 1].second - dur[i].second ) / LenghtToNrxtDur )
         {
             return dur[i];
         }
@@ -84,15 +95,20 @@ std::pair<int, double> duration::roundToNear(double time)
     return dur[4];
 }
 
+#include <iostream>
+
 void duration::initDurtion(double tactSize, double minTime)
 {
+
+    LenghtToNrxtDur = ConfigReader::instance().getValue<double>(CoreSettings::round_dur, 1.28);
     int k = 0;
     dur[k++] = std::make_pair(0, minTime);
-    //dur[k++] = std::make_pair(16, tactSize / 16);
+
     dur[k++] = std::make_pair(8, tactSize / 8);
     dur[k++] = std::make_pair(4, tactSize / 4);
     dur[k++] = std::make_pair(2, tactSize / 2);
     dur[k++] = std::make_pair(1, tactSize);
+
 }
 
 std::string duration::render(double time)
@@ -337,13 +353,9 @@ void block_note::merge(std::shared_ptr<block_note> el)
     auto it = _notes.begin();
     std::list<symbol::SPtr> & elL = el.get()->_notes;
     for(auto itE = elL.begin(); itE != elL.end(); ++itE)
-    {
-        //std::cout << "NEXT IND:" << it->get()->getIndex() << " DUR:" << it->get()->getDuration() << std::endl;
-        //std::cout << "MERGE IND:" << itE->get()->getIndex() << " DUR:" << itE->get()->getDuration() << std::endl;
-
+    {  
         it->get()->setDuration(it->get()->getDuration() + itE->get()->getDuration());
         it = std::next(it, 1);
-       // std::cout << " END MERGE!" << std::endl;
     }
     return;
 }
@@ -356,8 +368,6 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
 {
     auto itE = _notes.end();
 
-
-    // Отвратный алгоритммм
     if(prev && next)
     {
         for(auto it = _notes.begin(); it != itE; )
@@ -365,7 +375,7 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
             if( !(duration::roundToNear(it->get()->getDuration()).first) )
             {
 
-                if(!it->get()->getIndex()) //ты огрызок паузы тебя надо засунуть во все что спереди или сзади // одно типный код ван лавв (придурок)
+                if(!it->get()->getIndex())
                 {
 
                     double dur = it->get()->getDuration() / 2;
@@ -409,6 +419,26 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
                     auto f = std::find(NB.begin(), NB.end(), *it);
                     if(f != NB.end()) {notFind.insert(std::pair<int, symbol::SPtr>(f->get()->getIndex(),*f)); check |= 2; }
                 }
+            } else if(it->get()->getStatus() == StatusNote::Sustain)
+            {
+                bool ch = true;
+                if(prev)
+                {
+                    auto & NB = prev->_notes;
+                    for(auto itS : NB)
+                    {
+                        if(*it == itS )
+                        {
+                            itS.get()->setDuration(itS.get()->getDuration() +  it->get()->getDuration());
+                            it->get()->setDuration(0.0);
+                            ch = false;
+                        }
+                    }
+                    if(!ch) {
+                        it = _notes.erase(it);
+                        continue;
+                    }
+                }
             }
         }
 
@@ -422,6 +452,7 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
                 {
                     double dur = it->get()->getDuration() / 2;
                     i->second.get()->setDuration(i->second.get()->getDuration() + dur );
+                    i->second.get()->setStatus(it->get()->getStatus());
                 }
                 it->get()->setDuration(0.0);
             }
@@ -435,6 +466,7 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
                 {
                     double dur = it->get()->getDuration();
                     i->second.get()->setDuration(i->second.get()->getDuration() + dur );
+                    i->second.get()->setStatus(it->get()->getStatus());
                 }
                 it->get()->setDuration(0.0);
             }
@@ -446,9 +478,7 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
         {
             if( !(duration::roundToNear(it->get()->getDuration()).first) )
             {
-                //если ты огрызок то тебя надо к чему то присунуть назад желательно если нету них то вперед его время пихать
-
-                if(!it->get()->getIndex()) //ты огрызок паузы тебя надо засунуть во все что спереди или сзади // одно типный код ван лавв (придурок)
+                if(!it->get()->getIndex())
                 {
                     if(prev)
                     {
@@ -472,13 +502,8 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
                     it = _notes.erase(it);
                     continue;
                 }
-                else //ты огрызок ноты тебя надо засунуть к такой же ноте либо спереди либо сзади
+                else
                 {
-
-                    // когда на вход блоки и справа и слева передаются надо отделюную ветку прописать
-                    // найти для предыдущего то чего  не хватает  а если там больше ?? помоему все идет по пизде
-                    // как откусить от срединного блока по половине в каждую сторону  при условии что есть хоть по одной ноте  не обзательно одинаковой что были с обоих сторон повторяющимися
-                    // если нету то отдай все в предыдущее
 
                     if(prev)
                     {
@@ -489,6 +514,7 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
                             {
                                 itS.get()->setDuration(itS.get()->getDuration() +  it->get()->getDuration());
                                 it->get()->setDuration(0.0);
+                                itS.get()->setStatus(it->get()->getStatus());
                             }
                         }
                         it = _notes.erase(it);
@@ -503,6 +529,7 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
                             {
                                 itS.get()->setDuration(itS.get()->getDuration() + it->get()->getDuration());
                                 it->get()->setDuration(0.0);
+                                itS.get()->setStatus(it->get()->getStatus());
                             }
                         }
                         it = _notes.erase(it);
@@ -513,6 +540,7 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
             }
             else if(it->get()->getStatus() == StatusNote::Sustain)
             {
+                bool ch = true;
                 if(prev)
                 {
                     auto & NB = prev->_notes;
@@ -522,10 +550,13 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
                         {
                             itS.get()->setDuration(itS.get()->getDuration() +  it->get()->getDuration());
                             it->get()->setDuration(0.0);
+                            ch = false;
                         }
                     }
-                    it = _notes.erase(it);
-                    continue;
+                    if(!ch) {
+                        it = _notes.erase(it);
+                        continue;
+                    }
                 }
                 else
                 {
@@ -536,10 +567,13 @@ void block_note::durationAlive(std::shared_ptr<block_note> prev, std::shared_ptr
                         {
                             itS.get()->setDuration(itS.get()->getDuration() + it->get()->getDuration());
                             it->get()->setDuration(0.0);
+                            ch = false;
                         }
                     }
-                    it = _notes.erase(it);
-                    continue;
+                    if(!ch) {
+                        it = _notes.erase(it);
+                        continue;
+                    }
                 }
             }
             ++it;
@@ -570,10 +604,6 @@ bool block_note::empthy()
 
 bool operator==(const block_note &lhs, const block_note &rhs)
 {
-
-    //TODO: вынеси сравнение ноты и пазуы в символ и сделай виртуальный метод получения indexa у паузы 0 у ноты индекс
-
-
     if(lhs._notes.size() != rhs._notes.size()) return false;
 
     auto iL = lhs._notes.begin();
@@ -614,22 +644,35 @@ void tact::reorgTact()
 
     duration::initDurtion(sizeTact, minTime);
 
-   // std::cout << "SIZE:" << _notes.size() << std::endl;
-
     auto end = _notes.end();
     for(auto it = _notes.begin(); it != end;)
     {
         auto itN = std::next(it, 1);
         if(itN == end) { break; }
 
-        if(*(it->get()) == *(itN->get()))
+        if(*(it->get()) == *(itN->get()) && itN->get()->checkStat())
         {   
+
             it->get()->merge(*itN);
             _notes.erase(itN);
         } else {
             ++it;
         }
-     //   std::cout << "SIZE:" << _notes.size() << std::endl;
+    }
+
+    for(auto it = _notes.begin(); it != end;)
+    {
+        auto itN = std::next(it, 1);
+        if(itN == end) { break; }
+
+        if(*(it->get()) == *(itN->get()) )
+        {
+
+            it->get()->merge(*itN);
+            _notes.erase(itN);
+        } else {
+            ++it;
+        }
     }
 
     for(auto it = _notes.begin(); it != end; )
